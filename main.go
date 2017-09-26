@@ -1,18 +1,17 @@
 package main
 
 import (
-	"io"
-	"log"
-	"net/http"
+	"bufio"
 	"github.com/kYem/dota-dashboard/api"
 	"github.com/kYem/dota-dashboard/config"
+	"io"
 	"io/ioutil"
+	"log"
+	"net/http"
 	"os"
-	"text/template"
 	"strings"
-	"bufio"
+	"text/template"
 )
-
 
 func HomePage(w http.ResponseWriter, req *http.Request) {
 
@@ -98,9 +97,8 @@ func main() {
 	http.HandleFunc("/live", LiveGames)
 	http.HandleFunc("/matches", HomePage)
 
-	log.Fatal(http.ListenAndServe(":8888", nil))
+	log.Fatal(http.ListenAndServe(":8008", nil))
 }
-
 
 func serveResource(w http.ResponseWriter, req *http.Request) {
 	path := "public" + req.URL.Path
@@ -152,5 +150,3 @@ func setDefaultHeaders(w http.ResponseWriter) {
 	w.Header().Add("access-control-allow-origin", "http://dotatv.com:3000")
 	w.Header().Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
 }
-
-

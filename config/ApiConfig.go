@@ -1,10 +1,12 @@
 package config
 
+import "os"
+
 func LoadConfig() ValveApiConfig {
 	return ValveApiConfig{
 		"api.steampowered.com",
 		"https",
-		"673EF461E2406D27FDE71A7E20DFBAF1",
+		os.Getenv("STEAM_API_KEY"),
 		"IDOTA2Match_570",
 	}
 }
