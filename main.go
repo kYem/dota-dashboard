@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"github.com/kYem/dota-dashboard/api"
 	"github.com/kYem/dota-dashboard/config"
+	"github.com/kYem/dota-dashboard/dota"
 	"io"
 	"io/ioutil"
 	"log"
@@ -11,6 +12,7 @@ import (
 	"os"
 	"strings"
 	"text/template"
+	"encoding/json"
 )
 
 func HomePage(w http.ResponseWriter, req *http.Request) {
@@ -67,11 +69,13 @@ func LiveGamesStats(w http.ResponseWriter, req *http.Request) {
 	}
 
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		panic(err)
+
+	var match dota.LiveMatch
+	if err := json.NewDecoder(resp.Body).Decode(&match); err != nil {
+		log.Println(err)
 	}
-	io.WriteString(w, string(body))
+	// Send back
+	json.NewEncoder(w).Encode(match)
 }
 
 func main() {
