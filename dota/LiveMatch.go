@@ -1,10 +1,11 @@
 package dota
 
+import "encoding/json"
 
 type SteamDotaPlayer struct {
-	Accountid    int     `json:"accountid"`
-	Playerid     int     `json:"playerid"`
-	Heroid       int     `json:"heroid"`
+	AccountId    int     `json:"accountid"`
+	PlayerId     int     `json:"playerid"`
+	HeroId       int     `json:"heroid"`
 	PlayerStats
 }
 
@@ -20,6 +21,12 @@ type PlayerStats struct {
 	Gold         int     `json:"gold"`
 	X            float64 `json:"x"`
 	Y            float64 `json:"y"`
+}
+
+// Convert to DotaPlayer on encode, normalize json keys to underscore
+func (u *SteamDotaPlayer) MarshalJSON() ([]byte, error) {
+	var a = DotaPlayer(*u)
+	return json.Marshal(&a)
 }
 
 type DotaPlayer struct {
