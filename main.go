@@ -13,6 +13,8 @@ import (
 	"strings"
 	"text/template"
 	"encoding/json"
+	"fmt"
+	"golang.org/x/net/websocket"
 )
 
 func HomePage(w http.ResponseWriter, req *http.Request) {
@@ -100,7 +102,7 @@ func main() {
 	http.HandleFunc("/live/stats", LiveGamesStats)
 	http.HandleFunc("/live", LiveGames)
 	http.HandleFunc("/matches", HomePage)
-
+	http.Handle("/socket", websocket.Handler(Echo))
 	log.Fatal(http.ListenAndServe(":8008", nil))
 }
 
@@ -153,4 +155,28 @@ func setDefaultHeaders(w http.ResponseWriter) {
 	w.Header().Add("access-control-allow-credentials", "true")
 	w.Header().Add("access-control-allow-origin", "http://dotatv.com:3000")
 	w.Header().Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+}
+
+func Echo(ws *websocket.Conn) {
+	defer ws.Close()
+	fmt.Println("Client Connected")
+	var err error
+
+	for {
+		var reply string
+
+		if err = websocket.Message.Receive(ws, &reply); err != nil {
+			fmt.Println("Can't receive", err.Error())
+			break
+		}
+
+		fmt.Println("Received back from client: " + reply)
+		msg := "Received:  " + reply
+		fmt.Println("Sending to client: " + msg)
+
+		if err = websocket.Message.Send(ws, msg); err != nil {
+			fmt.Println("Can't send")
+			break
+		}
+	}
 }
