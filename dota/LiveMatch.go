@@ -1,6 +1,8 @@
 package dota
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 type SteamDotaPlayer struct {
 	AccountId    int     `json:"accountid"`
@@ -25,11 +27,11 @@ type PlayerStats struct {
 
 // Convert to DotaPlayer on encode, normalize json keys to underscore
 func (u *SteamDotaPlayer) MarshalJSON() ([]byte, error) {
-	var a = DotaPlayer(*u)
+	var a = Player(*u)
 	return json.Marshal(&a)
 }
 
-type DotaPlayer struct {
+type Player struct {
 	AccountId    int     `json:"account_id"`
 	PlayerId     int     `json:"player_id"`
 	HeroId       int     `json:"hero_id"`
@@ -57,8 +59,22 @@ type Building struct {
 }
 
 type SteamDotaMatch struct {
+	MatchId string `json:"matchid"`
+	MatchDetails
+}
+
+func (match *SteamDotaMatch) MarshalJSON() ([]byte, error) {
+	var a = Match(*match)
+	return json.Marshal(&a)
+}
+
+type Match struct {
+	MatchId string `json:"match_id"`
+	MatchDetails
+}
+
+type MatchDetails struct {
 	ServerSteamID string `json:"server_steam_id"`
-	Matchid       string `json:"matchid"`
 	Timestamp     int    `json:"timestamp"`
 	GameTime      int    `json:"game_time"`
 	GameMode      int    `json:"game_mode"`
@@ -70,7 +86,7 @@ type GraphData struct {
 }
 
 type LiveMatch struct {
-	Match SteamDotaMatch `json:"match"`
+	Match *SteamDotaMatch `json:"match"`
 	Teams []Team `json:"teams"`
 	Buildings []Building `json:"buildings"`
 	GraphData GraphData `json:"graph_data"`
