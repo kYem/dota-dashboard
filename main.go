@@ -163,18 +163,65 @@ func Echo(ws *websocket.Conn) {
 	var err error
 
 	for {
-		var reply string
+		type LiveMatchParams struct {
+			ServerSteamID string `json:"server_steam_id"`
+		}
+		type WsRequest struct {
+			Event string
+			Reference string
+			Params LiveMatchParams
+		}
 
-		if err = websocket.Message.Receive(ws, &reply); err != nil {
+		type WsError struct {
+			Event string `json:"event"`
+			Success bool `json:"success"`
+			Error string
+		}
+
+		type MatchResponse struct {
+			Event string `json:"event"`
+			Data dota.LiveMatch `json:"data"`
+			Success bool `json:"success"`
+		}
+
+		// receive JSON type T
+		var data WsRequest
+		if err = websocket.JSON.Receive(ws, &data); err != nil {
 			fmt.Println("Can't receive", err.Error())
 			break
 		}
 
-		fmt.Println("Received back from client: " + reply)
-		msg := "Received:  " + reply
-		fmt.Println("Sending to client: " + msg)
+		client := api.GetClient(config.LoadConfig())
+		log.Println("Fetching live server info for " + data.Params.ServerSteamID)
+		resp := client.GetRealTimeStats(data.Params.ServerSteamID)
 
-		if err = websocket.Message.Send(ws, msg); err != nil {
+		if resp.Body == nil {
+			apiError := WsError{
+				Event: data.Event + "." + data.Reference,
+				Error: "Failed to get live match data from steam",
+				Success: false,
+			}
+			if err = websocket.JSON.Send(ws, apiError); err != nil {
+				break
+			}
+		}
+
+		var match dota.LiveMatch
+		if err := json.NewDecoder(resp.Body).Decode(&match); err != nil {
+			log.Println(err)
+		}
+
+		resp.Body.Close()
+
+		fmt.Println("Received back from client: ",  data)
+		fmt.Println("Sending to client: ", data)
+
+		wsResp := MatchResponse{
+			Event: data.Event + "." + data.Reference,
+			Data: match,
+			Success: true,
+		}
+		if err = websocket.JSON.Send(ws, wsResp); err != nil {
 			fmt.Println("Can't send")
 			break
 		}
