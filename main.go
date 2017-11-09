@@ -213,9 +213,6 @@ func Echo(ws *websocket.Conn) {
 
 		resp.Body.Close()
 
-		fmt.Println("Received back from client: ",  data)
-		fmt.Println("Sending to client: ", data)
-
 		wsResp := MatchResponse{
 			Event: data.Event + "." + data.Reference,
 			Data: match,
