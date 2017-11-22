@@ -2,90 +2,22 @@ package main
 
 import (
 	"bufio"
-	"github.com/kYem/dota-dashboard/api"
-	"github.com/kYem/dota-dashboard/config"
-	"github.com/kYem/dota-dashboard/dota"
-	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"strings"
 	"text/template"
-	"encoding/json"
-	"fmt"
 	"golang.org/x/net/websocket"
+	"github.com/kYem/dota-dashboard/ws"
+	"github.com/kYem/dota-dashboard/controller"
 )
-
-func HomePage(w http.ResponseWriter, req *http.Request) {
-
-	client := api.GetClient(config.LoadConfig())
-
-	resp := client.GetTopLiveGames("1")
-
-	if resp.Body == nil {
-		http.Error(w, "Please send a request body", 400)
-		return
-	}
-
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		panic(err)
-	}
-	io.WriteString(w, string(body))
-}
-
-func LiveGames(w http.ResponseWriter, req *http.Request) {
-
-	setDefaultHeaders(w)
-	partner := req.URL.Query().Get("partner")
-	if partner == "" {
-		partner = "0"
-	}
-	client := api.GetClient(config.LoadConfig())
-	resp := client.GetTopLiveGames(partner)
-
-	if resp.Body == nil {
-		http.Error(w, "Please send a request body", 400)
-		return
-	}
-
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		panic(err)
-	}
-	io.WriteString(w, string(body))
-}
-
-func LiveGamesStats(w http.ResponseWriter, req *http.Request) {
-	setDefaultHeaders(w)
-	serverSteamId := req.URL.Query().Get("server_steam_id")
-	client := api.GetClient(config.LoadConfig())
-	resp := client.GetRealTimeStats(serverSteamId)
-
-	if resp.Body == nil {
-		http.Error(w, "Please send a request body", 400)
-		return
-	}
-
-	defer resp.Body.Close()
-
-	var match dota.LiveMatch
-	if err := json.NewDecoder(resp.Body).Decode(&match); err != nil {
-		log.Println(err)
-	}
-	// Send back
-	json.NewEncoder(w).Encode(match)
-}
 
 func main() {
 	templates := populateTemplates()
 
 	http.HandleFunc("/",
 		func(w http.ResponseWriter, req *http.Request) {
-			setDefaultHeaders(w)
+			controller.SetDefaultHeaders(w)
 			requestedFile := req.URL.Path[1:]
 			tmpl := templates.Lookup(requestedFile + ".html")
 
@@ -99,10 +31,10 @@ func main() {
 
 	http.HandleFunc("/img/", serveResource)
 	http.HandleFunc("/css/", serveResource)
-	http.HandleFunc("/live/stats", LiveGamesStats)
-	http.HandleFunc("/live", LiveGames)
-	http.HandleFunc("/matches", HomePage)
-	http.Handle("/socket", websocket.Handler(Echo))
+	http.HandleFunc("/live/stats", controller.LiveGamesStats)
+	http.HandleFunc("/live", controller.LiveGames)
+	http.HandleFunc("/matches", controller.HomePage)
+	http.Handle("/socket", websocket.Handler(ws.Echo))
 	log.Fatal(http.ListenAndServe(":8008", nil))
 }
 
@@ -129,6 +61,7 @@ func serveResource(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(404)
 	}
 }
+
 func populateTemplates() *template.Template {
 
 	result := template.New("templates")
@@ -149,78 +82,4 @@ func populateTemplates() *template.Template {
 	result.ParseFiles(*templatePaths...)
 
 	return result
-}
-
-func setDefaultHeaders(w http.ResponseWriter) {
-	w.Header().Add("access-control-allow-credentials", "true")
-	w.Header().Add("access-control-allow-origin", "http://dotatv.com:3000")
-	w.Header().Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
-}
-
-func Echo(ws *websocket.Conn) {
-	defer ws.Close()
-	fmt.Println("Client Connected")
-	var err error
-
-	for {
-		type LiveMatchParams struct {
-			ServerSteamID string `json:"server_steam_id"`
-		}
-		type WsRequest struct {
-			Event string
-			Reference string
-			Params LiveMatchParams
-		}
-
-		type WsError struct {
-			Event string `json:"event"`
-			Success bool `json:"success"`
-			Error string
-		}
-
-		type MatchResponse struct {
-			Event string `json:"event"`
-			Data dota.LiveMatch `json:"data"`
-			Success bool `json:"success"`
-		}
-
-		// receive JSON type T
-		var data WsRequest
-		if err = websocket.JSON.Receive(ws, &data); err != nil {
-			fmt.Println("Can't receive", err.Error())
-			break
-		}
-
-		client := api.GetClient(config.LoadConfig())
-		log.Println("Fetching live server info for " + data.Params.ServerSteamID)
-		resp := client.GetRealTimeStats(data.Params.ServerSteamID)
-
-		if resp.Body == nil {
-			apiError := WsError{
-				Event: data.Event + "." + data.Reference,
-				Error: "Failed to get live match data from steam",
-				Success: false,
-			}
-			if err = websocket.JSON.Send(ws, apiError); err != nil {
-				break
-			}
-		}
-
-		var match dota.LiveMatch
-		if err := json.NewDecoder(resp.Body).Decode(&match); err != nil {
-			log.Println(err)
-		}
-
-		resp.Body.Close()
-
-		wsResp := MatchResponse{
-			Event: data.Event + "." + data.Reference,
-			Data: match,
-			Success: true,
-		}
-		if err = websocket.JSON.Send(ws, wsResp); err != nil {
-			fmt.Println("Can't send")
-			break
-		}
-	}
 }

@@ -15,9 +15,9 @@ type client struct {
 	apiKey        string
 }
 
-func (this *client) GetMatchHistory(matchId string) (*http.Response) {
+func (client *client) GetMatchHistory(matchId string) (*http.Response) {
 
-	url := fmt.Sprintf("%s&match_id=%s", this.getMatchUrl("GetMatchDetails"), matchId)
+	url := fmt.Sprintf("%s&match_id=%s", client.getMatchUrl("GetMatchDetails"), matchId)
 	resp, err := http.Get(url)
 
 	if err != nil {
@@ -29,9 +29,9 @@ func (this *client) GetMatchHistory(matchId string) (*http.Response) {
 
 
 
-func (this *client) GetTopLiveGames(partner string) (*http.Response) {
+func (client *client) GetTopLiveGames(partner string) (*http.Response) {
 
-	url := fmt.Sprintf("%s&partner=%s", this.getMatchUrl("GetTopLiveGame"), partner)
+	url := fmt.Sprintf("%s&partner=%s", client.getMatchUrl("GetTopLiveGame"), partner)
 	resp, err := http.Get(url)
 
 	if err != nil {
@@ -41,21 +41,21 @@ func (this *client) GetTopLiveGames(partner string) (*http.Response) {
 	return resp
 }
 
-func (this *client) getMatchUrl(endpoint string) string {
+func (client *client) getMatchUrl(endpoint string) string {
 	return fmt.Sprintf(
 		"%s://%s/%s/%s/%s?key=%s",
-		this.schema,
-		this.hostname,
-		this.game,
+		client.schema,
+		client.hostname,
+		client.game,
 		endpoint,
 		VERSION,
-		this.apiKey,
+		client.apiKey,
 	)
 }
 
-func (this *client) GetRealTimeStats(serverSteamId string) (*http.Response) {
+func (client *client) GetRealTimeStats(serverSteamId string) (*http.Response) {
 
-	url := fmt.Sprintf("%s&server_steam_id=%s", this.getMatchStatsUrl("GetRealTimeStats"), serverSteamId)
+	url := fmt.Sprintf("%s&server_steam_id=%s", client.getMatchStatsUrl("GetRealTimeStats"), serverSteamId)
 	resp, err := http.Get(url)
 
 	if err != nil {
@@ -65,15 +65,15 @@ func (this *client) GetRealTimeStats(serverSteamId string) (*http.Response) {
 	return resp
 }
 
-func (this *client) getMatchStatsUrl(endpoint string) string {
+func (client *client) getMatchStatsUrl(endpoint string) string {
 	return fmt.Sprintf(
 		"%s://%s/%s/%s/%s?key=%s",
-		this.schema,
-		this.hostname,
+		client.schema,
+		client.hostname,
 		"IDOTA2MatchStats_570",
 		endpoint,
 		"v1",
-		this.apiKey,
+		client.apiKey,
 	)
 }
 
@@ -85,5 +85,4 @@ func GetClient(config config.ValveApiConfig) client {
 		config.DotaGame,
 		config.ApiKey,
 	}
-
 }
