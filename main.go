@@ -7,9 +7,7 @@ import (
 	"os"
 	"strings"
 	"text/template"
-	"golang.org/x/net/websocket"
 	"github.com/kYem/dota-dashboard/ws"
-	"github.com/kYem/dota-dashboard/controller"
 )
 
 func main() {
@@ -17,7 +15,7 @@ func main() {
 
 	http.HandleFunc("/",
 		func(w http.ResponseWriter, req *http.Request) {
-			controller.SetDefaultHeaders(w)
+			SetDefaultHeaders(w)
 			requestedFile := req.URL.Path[1:]
 			tmpl := templates.Lookup(requestedFile + ".html")
 
@@ -31,10 +29,11 @@ func main() {
 
 	http.HandleFunc("/img/", serveResource)
 	http.HandleFunc("/css/", serveResource)
-	http.HandleFunc("/live/stats", controller.LiveGamesStats)
-	http.HandleFunc("/live", controller.LiveGames)
-	http.HandleFunc("/matches", controller.HomePage)
-	http.Handle("/socket", websocket.Handler(ws.Echo))
+	http.HandleFunc("/live/stats", LiveGamesStats)
+	http.HandleFunc("/live", LiveGames)
+	http.HandleFunc("/matches", HomePage)
+	ws.Init()
+	http.HandleFunc("/ws", ws.Handler)
 	log.Fatal(http.ListenAndServe(":8008", nil))
 }
 

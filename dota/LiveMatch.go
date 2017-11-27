@@ -38,13 +38,22 @@ type Player struct {
 	PlayerStats
 }
 
-type Team struct {
+type TeamDetails struct {
 	TeamNumber int    `json:"team_number"`
 	TeamID     int    `json:"team_id"`
 	TeamName   string `json:"team_name"`
 	TeamLogo   string `json:"team_logo"`
 	Score      int    `json:"score"`
+}
+
+type Team struct {
+	TeamDetails
 	Players    []SteamDotaPlayer `json:"players"`
+}
+
+type ApiTeam struct {
+	TeamDetails
+	Players    []Player `json:"players"`
 }
 
 type Building struct {
@@ -88,6 +97,14 @@ type GraphData struct {
 type LiveMatch struct {
 	Match *SteamDotaMatch `json:"match"`
 	Teams []Team `json:"teams"`
+	Buildings []Building `json:"buildings"`
+	GraphData GraphData `json:"graph_data"`
+	DeltaFrame bool `json:"delta_frame"`
+}
+
+type ApiLiveMatch struct {
+	Match *Match `json:"match"`
+	Teams []ApiTeam `json:"teams"`
 	Buildings []Building `json:"buildings"`
 	GraphData GraphData `json:"graph_data"`
 	DeltaFrame bool `json:"delta_frame"`
