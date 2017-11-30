@@ -9,6 +9,8 @@ import (
 	"github.com/kYem/dota-dashboard/dota"
 	"github.com/garyburd/redigo/redis"
 	"encoding/json"
+	"strings"
+	"errors"
 )
 
 
@@ -23,12 +25,28 @@ type Store struct {
 type User struct {
 	ID   string
 	conn *websocket.Conn
+	Channels []string
+}
+
+func (u *User) addChannel(channelName string) {
+	u.Channels = append(u.Channels, channelName)
+}
+
+func (u *User) removeChannel(channelName string) {
+	for i, channel := range u.Channels {
+		if channel == channelName {
+			u.Channels = append(u.Channels[:i], u.Channels[i+1:]...)
+			log.Printf("Removed user %s from channel %s \n", u.ID, channel)
+			break
+		}
+	}
 }
 
 func (s *Store) newUser(conn *websocket.Conn) *User {
 	u := &User{
 		ID:   uuid.NewV4().String(),
 		conn: conn,
+		Channels: make([]string, 0, 1),
 	}
 	log.Printf("Adding new user %s\n", u.ID)
 	s.Lock()
@@ -40,23 +58,61 @@ func (s *Store) newUser(conn *websocket.Conn) *User {
 
 func (s *Store) Subscribe(u *User, channelName string) error {
 
-	if _, ok := s.Channels[channelName]; ok {
-		fmt.Sprintf("Channel %s already exists \n", channelName)
-	} else {
+	if _, ok := s.Channels[channelName]; !ok {
 		fmt.Sprintf("Creating empty channel %s \n", channelName)
 		s.Channels[channelName] = make(map[string]*User)
+
+		if conErr := gPubSubConn.Subscribe(channelName); conErr != nil {
+			return conErr
+		}
+		log.Printf("subscribed to live info for %s", channelName)
 	}
 
-	if conErr := gPubSubConn.Subscribe(channelName); conErr != nil {
-		return conErr
-	}
-	log.Println("Subscribed to live info for " + channelName)
-
-	s.Lock()
-	defer s.Unlock()
 	s.Channels[channelName][u.ID] = u
+	u.addChannel(channelName)
 
 	return nil
+}
+
+func (s *Store) Unsubscribe(u *User, channelName string) {
+
+	if _, ok := s.Channels[channelName]; !ok {
+		log.Printf("Trying to unsubscribe from non existant channel %s \n", channelName)
+	}
+
+	delete(s.Channels[channelName], u.ID)
+	u.removeChannel(channelName)
+	log.Printf("Remove user %s subscribtion %s\n", u.ID, channelName)
+}
+
+// Only allow single sub on live match
+func (s *Store) SubscribeMatch(u *User, channelName string) error {
+
+	// Make sure we are dealing with live match sub
+	if ok := isLiveMatchChannel(channelName); !ok {
+		return errors.New("channel name must start with " + channelLiveMatchPrefix + " received " + channelName)
+	}
+
+	// Unsubscribe from other channel
+	var isMatchChannel bool
+	for _, name := range u.Channels {
+
+		// Already subscribed to this channel
+		if name == channelName {
+			continue
+		}
+
+		if isMatchChannel = isLiveMatchChannel(name); isMatchChannel {
+			s.Unsubscribe(u, name)
+			u.removeChannel(channelName)
+		}
+	}
+
+	return s.Subscribe(u, channelName)
+}
+
+func isLiveMatchChannel(channelName string) bool {
+	return strings.HasPrefix(channelName, channelLiveMatchPrefix)
 }
 
 
@@ -75,6 +131,7 @@ func (s *Store) findAndDeliver(channel string, content string) {
 
 	if _, ok := s.Channels[channel]; ok {
 
+		log.Printf("Broadcasting to %s, user %d \n", channel, len(s.Channels[channel]))
 		for _, u := range s.Channels[channel] {
 
 			if err := u.conn.WriteJSON(wsResp); err != nil {
@@ -91,11 +148,12 @@ func (s *Store) findAndDeliver(channel string, content string) {
 
 }
 
-
 func (s *Store) removeUser(u *User) {
 
 	s.Lock()
 	defer s.Unlock()
+
+	s.removeUserFromChannels(u)
 
 	for i, storeUser := range s.Users {
 		if storeUser == u {
@@ -103,22 +161,28 @@ func (s *Store) removeUser(u *User) {
 			log.Printf("Removed user %s from store \n", u.ID)
 		}
 	}
+}
 
+func (s *Store) removeUserFromChannels(u *User) {
 	// Now remove from channels
-	for channelName := range s.Channels {
+	for _, channelName := range u.Channels {
 
-		delete(s.Channels[channelName], u.ID)
-		log.Printf("Remove user %s subscribtion %s\n", u.ID, channelName)
-
+		s.Unsubscribe(u, channelName)
 		remaining := len(s.Channels[channelName])
 		log.Printf("channel %s have %d subs remaining\n", channelName, remaining)
 
 		if remaining == 0 {
-			delete(s.Channels, channelName)
-			log.Printf("channel %s have been removed\n", channelName)
-			if err := s.pubSubConn.Unsubscribe(channelName); err != nil {
-				log.Printf("Failed to remove server subscription %s, err: %s\n", channelName, err)
-			}
+			s.removeChannel(channelName)
 		}
+	}
+
+	u.Channels = make([]string, 0, 1)
+}
+
+func (s *Store) removeChannel(channelName string) {
+	delete(s.Channels, channelName)
+	log.Printf("channel %s have been removed\n", channelName)
+	if err := s.pubSubConn.Unsubscribe(channelName); err != nil {
+		log.Printf("Failed to remove server subscription %s, err: %s\n", channelName, err)
 	}
 }

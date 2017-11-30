@@ -84,7 +84,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		err := gStore.Subscribe(u, channelLiveMatchPrefix+data.Params.ServerSteamID)
+		err := gStore.SubscribeMatch(u, channelLiveMatchPrefix+data.Params.ServerSteamID)
 		if err != nil {
 			log.Println(err)
 		}
