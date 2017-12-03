@@ -6,14 +6,13 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	"sync"
-	"github.com/kYem/dota-dashboard/dota"
 	"github.com/garyburd/redigo/redis"
-	"encoding/json"
 	"strings"
 	"errors"
 	"time"
+	"github.com/kYem/dota-dashboard/dota"
+	"encoding/json"
 )
-
 
 // Store holds the collection of users connected through websocket
 type Store struct {
@@ -23,31 +22,12 @@ type Store struct {
 	sync.Mutex
 }
 
-type User struct {
-	ID   string
-	conn *websocket.Conn
-	Channels []string
-}
-
-func (u *User) addChannel(channelName string) {
-	u.Channels = append(u.Channels, channelName)
-}
-
-func (u *User) removeChannel(channelName string) {
-	for i, channel := range u.Channels {
-		if channel == channelName {
-			u.Channels = append(u.Channels[:i], u.Channels[i+1:]...)
-			log.Printf("removed user %s channel %s \n", u.ID, channel)
-			break
-		}
-	}
-}
-
 func (s *Store) newUser(conn *websocket.Conn) *User {
 	u := &User{
 		ID:   uuid.NewV4().String(),
 		conn: conn,
 		Channels: make([]string, 0, 1),
+		send: make(chan *ApiMatchResponse),
 	}
 	log.Printf("Adding new user %s\n", u.ID)
 	s.Lock()
@@ -131,7 +111,7 @@ func (s *Store) findAndDeliver(channel string, content string) {
 		log.Println(err)
 	}
 
-	wsResp := ApiMatchResponse{
+	wsResp := &ApiMatchResponse{
 		Event: channel,
 		Data: match,
 		Success: true,
@@ -142,13 +122,7 @@ func (s *Store) findAndDeliver(channel string, content string) {
 		log.Printf("Broadcasting to %s, user %d \n", channel, len(s.Channels[channel]))
 		start := time.Now()
 		for _, u := range s.Channels[channel] {
-
-			if err := u.conn.WriteJSON(wsResp); err != nil {
-				log.Printf("error on message delivery through ws. e: %s\n", err)
-				go s.removeUser(u)
-			} else {
-				log.Printf("user %s found at our store, message sent\n", u.ID)
-			}
+			s.Channels[channel][u.ID].send <- wsResp
 		}
 		elapsed := time.Since(start)
 		log.Printf("Delivered in took %s", elapsed)

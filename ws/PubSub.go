@@ -74,6 +74,8 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}
 	u := gStore.newUser(conn)
 
+	go u.writePump()
+
 	for {
 
 		// receive JSON type T
