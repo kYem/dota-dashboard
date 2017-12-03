@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"strings"
 	"errors"
+	"time"
 )
 
 
@@ -36,7 +37,7 @@ func (u *User) removeChannel(channelName string) {
 	for i, channel := range u.Channels {
 		if channel == channelName {
 			u.Channels = append(u.Channels[:i], u.Channels[i+1:]...)
-			log.Printf("Removed user %s from channel %s \n", u.ID, channel)
+			log.Printf("removed user %s channel %s \n", u.ID, channel)
 			break
 		}
 	}
@@ -82,7 +83,14 @@ func (s *Store) Unsubscribe(u *User, channelName string) {
 
 	delete(s.Channels[channelName], u.ID)
 	u.removeChannel(channelName)
-	log.Printf("Remove user %s subscribtion %s\n", u.ID, channelName)
+	log.Printf("store remove user %s subscribtion %s\n", u.ID, channelName)
+
+	remaining := len(s.Channels[channelName])
+	log.Printf("channel %s have %d subs remaining\n", channelName, remaining)
+
+	if remaining == 0 {
+		s.removeChannel(channelName)
+	}
 }
 
 // Only allow single sub on live match
@@ -132,6 +140,7 @@ func (s *Store) findAndDeliver(channel string, content string) {
 	if _, ok := s.Channels[channel]; ok {
 
 		log.Printf("Broadcasting to %s, user %d \n", channel, len(s.Channels[channel]))
+		start := time.Now()
 		for _, u := range s.Channels[channel] {
 
 			if err := u.conn.WriteJSON(wsResp); err != nil {
@@ -140,12 +149,12 @@ func (s *Store) findAndDeliver(channel string, content string) {
 			} else {
 				log.Printf("user %s found at our store, message sent\n", u.ID)
 			}
-			return
 		}
+		elapsed := time.Since(start)
+		log.Printf("Delivered in took %s", elapsed)
 	} else {
 		log.Printf("Channel %s not found at our store\n", channel)
 	}
-
 }
 
 func (s *Store) removeUser(u *User) {
@@ -166,14 +175,7 @@ func (s *Store) removeUser(u *User) {
 func (s *Store) removeUserFromChannels(u *User) {
 	// Now remove from channels
 	for _, channelName := range u.Channels {
-
 		s.Unsubscribe(u, channelName)
-		remaining := len(s.Channels[channelName])
-		log.Printf("channel %s have %d subs remaining\n", channelName, remaining)
-
-		if remaining == 0 {
-			s.removeChannel(channelName)
-		}
 	}
 
 	u.Channels = make([]string, 0, 1)
