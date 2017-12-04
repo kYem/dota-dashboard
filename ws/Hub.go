@@ -118,8 +118,7 @@ func (s *Store) findAndDeliver(channel string, content string) {
 	}
 
 	if _, ok := s.Channels[channel]; ok {
-
-		log.Printf("Broadcasting to %s, user %d \n", channel, len(s.Channels[channel]))
+		log.Printf("Broadcasting to %s, user count %d \n", channel, len(s.Channels[channel]))
 		start := time.Now()
 		for _, u := range s.Channels[channel] {
 			s.Channels[channel][u.ID].send <- wsResp
