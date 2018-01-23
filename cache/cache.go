@@ -3,20 +3,19 @@ package cache
 import (
 	"github.com/garyburd/redigo/redis"
 	"log"
-	"time"
 )
 const (
 	server                 = ":6379"
 )
 
-var Cache = GetCache()
+var Cache *RedisStorage
+var Pool *redis.Pool
 
-func GetCache() *RedisStorage {
-
-	return &RedisStorage{
-		Pool:      NewPool(),
+func init() {
+	Pool = NewPool()
+	Cache = &RedisStorage{
+		Pool: Pool,
 	}
-
 }
 
 func NewPool() *redis.Pool {
@@ -40,11 +39,12 @@ type RedisStorage struct {
 	Unmarshal func([]byte, interface{}) error
 }
 
-func (r *RedisStorage) Set(key string, value string, expiration time.Duration) error {
+func (r *RedisStorage) Set(key string, value string, expiration int32) error {
 
 	var err error
 	c:= r.Pool.Get()
-	_, err = c.Do("SET", key, value)
+	log.Printf("Params %s:%d.", key, expiration)
+	_, err = c.Do("SETEX", key, expiration, value)
 	if err != nil {
 		log.Printf("Could not SET %s:%s.", key, err)
 		return err

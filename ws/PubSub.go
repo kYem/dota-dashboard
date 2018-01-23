@@ -17,7 +17,6 @@ const (
 var (
 	gStore      *Store
 	gPubSubConn *redis.PubSubConn
-	pool = cache.NewPool()
 )
 
 type LiveMatchParams struct {
@@ -96,9 +95,9 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 func GetConn() *redis.PubSubConn  {
 
-	c := pool.Get()
+	c := cache.Pool.Get()
 
-	log.Printf("Active connections %d", pool.ActiveCount())
+	log.Printf("Active connections %d", cache.Pool.ActiveCount())
 	pubSub := &redis.PubSubConn{Conn: c}
 
 	if pubSub == nil {

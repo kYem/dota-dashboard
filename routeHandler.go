@@ -71,7 +71,7 @@ func LiveGames(w http.ResponseWriter, req *http.Request) {
 
 	bodyString := string(body)
 
-	c.Set(cacheKey, bodyString, 60)
+	c.Set(cacheKey, bodyString, 10)
 
 
 	io.WriteString(w, bodyString)
