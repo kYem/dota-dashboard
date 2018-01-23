@@ -7,17 +7,17 @@ import (
 	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"github.com/kYem/dota-dashboard/dota"
+	"github.com/kYem/dota-dashboard/cache"
+)
+
+const (
+	channelLiveMatchPrefix = "dota_live_match."
 )
 
 var (
 	gStore      *Store
 	gPubSubConn *redis.PubSubConn
-	pool = newPool()
-)
-
-const (
-	server                 = ":6379"
-	channelLiveMatchPrefix = "dota_live_match."
+	pool = cache.NewPool()
 )
 
 type LiveMatchParams struct {
@@ -108,21 +108,6 @@ func GetConn() *redis.PubSubConn  {
 	return pubSub
 }
 
-
-func newPool() *redis.Pool {
-	return &redis.Pool{
-		MaxIdle: 80,
-		MaxActive: 12000, // max number of connections
-		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp", server)
-			if err != nil {
-				panic(err.Error())
-			}
-			log.Printf("Dail master redis server %s succeefully!", server)
-			return c, err
-		},
-	}
-}
 
 func DeliverMessages() {
 

@@ -9,6 +9,7 @@ import (
 	"log"
 	"github.com/kYem/dota-dashboard/api"
 	"github.com/kYem/dota-dashboard/config"
+	"github.com/kYem/dota-dashboard/cache"
 )
 
 func SetDefaultHeaders(w http.ResponseWriter) {
@@ -39,6 +40,17 @@ func HomePage(w http.ResponseWriter, req *http.Request) {
 func LiveGames(w http.ResponseWriter, req *http.Request) {
 
 	SetDefaultHeaders(w)
+
+	c := cache.Cache
+	cacheKey := "live_games"
+	cacheItem, err := c.Get(cacheKey)
+
+	if err == nil {
+		io.WriteString(w, cacheItem)
+		return
+	}
+
+
 	partner := req.URL.Query().Get("partner")
 	if partner == "" {
 		partner = "0"
@@ -56,7 +68,13 @@ func LiveGames(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	io.WriteString(w, string(body))
+
+	bodyString := string(body)
+
+	c.Set(cacheKey, bodyString, 60)
+
+
+	io.WriteString(w, bodyString)
 }
 
 func LiveGamesStats(w http.ResponseWriter, req *http.Request) {
