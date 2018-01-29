@@ -65,6 +65,15 @@ func (client *client) GetRealTimeStats(serverSteamId string) (*http.Response) {
 	return resp
 }
 
+func (client *client) GetLiveLeagueGames() (*http.Response) {
+	resp, err := http.Get(client.getMatchUrl("GetLiveLeagueGames"))
+	if err != nil {
+		panic(err)
+	}
+
+	return resp
+}
+
 func (client *client) getMatchStatsUrl(endpoint string) string {
 	return fmt.Sprintf(
 		"%s://%s/%s/%s/%s?key=%s",

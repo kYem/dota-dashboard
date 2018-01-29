@@ -98,3 +98,22 @@ func LiveGamesStats(w http.ResponseWriter, req *http.Request) {
 	json.NewEncoder(w).Encode(match)
 }
 
+func LeagueGames(w http.ResponseWriter, req *http.Request) {
+	SetDefaultHeaders(w)
+	client := api.GetClient(config.LoadConfig())
+	resp := client.GetLiveLeagueGames()
+
+	if resp.Body == nil {
+		http.Error(w, "Please send a request body", 400)
+		return
+	}
+
+	defer resp.Body.Close()
+
+	var leagueGames dota.LeagueGameResult
+	if err := json.NewDecoder(resp.Body).Decode(&leagueGames); err != nil {
+		log.Println(err)
+	}
+	json.NewEncoder(w).Encode(leagueGames)
+}
+

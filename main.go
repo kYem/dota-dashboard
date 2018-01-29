@@ -30,6 +30,7 @@ func main() {
 	http.HandleFunc("/img/", serveResource)
 	http.HandleFunc("/css/", serveResource)
 	http.HandleFunc("/live/stats", LiveGamesStats)
+	http.HandleFunc("/live/league", LeagueGames)
 	http.HandleFunc("/live", LiveGames)
 	http.HandleFunc("/matches", HomePage)
 	ws.Init()
