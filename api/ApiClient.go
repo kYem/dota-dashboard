@@ -1,6 +1,7 @@
 package api
 
 import (
+	"log"
 	"net/http"
 	"fmt"
 	"github.com/kYem/dota-dashboard/config"
@@ -21,7 +22,7 @@ func (client *client) GetMatchHistory(matchId string) (*http.Response) {
 	resp, err := http.Get(url)
 
 	if err != nil {
-		panic(err)
+		log.Printf("GetMatchHistory: failed: %s", err)
 	}
 
 	return resp
@@ -35,7 +36,7 @@ func (client *client) GetTopLiveGames(partner string) (*http.Response) {
 	resp, err := http.Get(url)
 
 	if err != nil {
-		panic(err)
+		log.Printf("GetTopLiveGames: failed: %s", err)
 	}
 
 	return resp

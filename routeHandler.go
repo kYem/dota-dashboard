@@ -57,6 +57,10 @@ func LiveGames(w http.ResponseWriter, req *http.Request) {
 	}
 	client := api.GetClient(config.LoadConfig())
 	resp := client.GetTopLiveGames(partner)
+	if resp.StatusCode != http.StatusOK {
+		http.Error(w, "Steam api is down", 500)
+		return
+	}
 
 	if resp.Body == nil {
 		http.Error(w, "Please send a request body", 400)
