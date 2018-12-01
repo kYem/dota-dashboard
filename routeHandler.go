@@ -68,12 +68,19 @@ func LiveGames(w http.ResponseWriter, req *http.Request) {
 	}
 
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+
+	var liveGames dota.TopLiveGames
+	if err := json.NewDecoder(resp.Body).Decode(&liveGames); err != nil {
+		log.Println(err)
+	}
+	// Send back
+	b, err := json.Marshal(liveGames)
 	if err != nil {
 		panic(err)
+		return
 	}
 
-	bodyString := string(body)
+	bodyString := string(b)
 
 	c.Set(cacheKey, bodyString, 10)
 

@@ -2,6 +2,7 @@ package dota
 
 import (
 	"encoding/json"
+	"strconv"
 )
 
 type SteamDotaPlayer struct {
@@ -23,6 +24,7 @@ type PlayerStats struct {
 	Gold         int     `json:"gold"`
 	X            float64 `json:"x"`
 	Y            float64 `json:"y"`
+	NetWorth     int     `json:"net_worth"`
 }
 
 // Convert to DotaPlayer on encode, normalize json keys to underscore
@@ -42,8 +44,10 @@ type TeamDetails struct {
 	TeamNumber int    `json:"team_number"`
 	TeamID     int    `json:"team_id"`
 	TeamName   string `json:"team_name"`
-	TeamLogo   string `json:"team_logo"`
+	TeamTag    string `json:"team_tag"`
+	TeamLogo   int64    `json:"team_logo"`
 	Score      int    `json:"score"`
+	NetWorth   int    `json:"net_worth"`
 }
 
 type Team struct {
@@ -54,6 +58,17 @@ type Team struct {
 type ApiTeam struct {
 	TeamDetails
 	Players    []Player `json:"players"`
+}
+
+func (team *ApiTeam) MarshalJSON() ([]byte, error) {
+	type Alias ApiTeam
+	return json.Marshal(&struct {
+		TeamLogo string `json:"team_logo"`
+		*Alias
+	}{
+		TeamLogo: strconv.FormatInt(team.TeamLogo, 10) ,
+		Alias:   (*Alias)(team),
+	})
 }
 
 type Building struct {
@@ -68,13 +83,21 @@ type Building struct {
 }
 
 type SteamDotaMatch struct {
-	MatchId string `json:"matchid"`
+	MatchId int64 `json:"matchid"`
 	MatchDetails
 }
 
 func (match *SteamDotaMatch) MarshalJSON() ([]byte, error) {
-	var a = Match(*match)
-	return json.Marshal(&a)
+	type Alias SteamDotaMatch
+	return json.Marshal(&struct {
+		MatchId string `json:"match_id"`
+		ServerSteamID string `json:"server_steam_id"`
+		*Alias
+	}{
+		MatchId: strconv.FormatInt(match.MatchId, 10) ,
+		ServerSteamID: strconv.FormatInt(match.ServerSteamID, 10),
+		Alias:   (*Alias)(match),
+	})
 }
 
 type Match struct {
@@ -83,11 +106,13 @@ type Match struct {
 }
 
 type MatchDetails struct {
-	ServerSteamID string `json:"server_steam_id"`
-	Timestamp     int    `json:"timestamp"`
-	GameTime      int    `json:"game_time"`
-	GameMode      int    `json:"game_mode"`
-	LeagueID      int    `json:"league_id"`
+	ServerSteamID int64 `json:"server_steam_id"`
+	Timestamp     int   `json:"timestamp"`
+	GameTime      int   `json:"game_time"`
+	GameMode      int   `json:"game_mode"`
+	LeagueID      int   `json:"league_id"`
+	LeagueNodeID  int   `json:"league_node_id"`
+	GameState     int   `json:"game_state"`
 }
 
 type GraphData struct {
