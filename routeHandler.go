@@ -14,7 +14,7 @@ import (
 
 func SetDefaultHeaders(w http.ResponseWriter) {
 	w.Header().Add("access-control-allow-credentials", "true")
-	w.Header().Add("access-control-allow-origin", "http://dotatv.com:3000")
+	w.Header().Add("access-control-allow-origin", "*")
 	w.Header().Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
 }
 
