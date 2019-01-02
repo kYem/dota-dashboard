@@ -12,6 +12,8 @@ import (
 	"github.com/kYem/dota-dashboard/cache"
 )
 
+var client = api.GetClient(config.LoadConfig())
+
 func SetDefaultHeaders(w http.ResponseWriter) {
 	w.Header().Add("access-control-allow-credentials", "true")
 	w.Header().Add("access-control-allow-origin", "*")
@@ -19,8 +21,6 @@ func SetDefaultHeaders(w http.ResponseWriter) {
 }
 
 func HomePage(w http.ResponseWriter, req *http.Request) {
-
-	client := api.GetClient(config.LoadConfig())
 
 	resp := client.GetTopLiveGames("1")
 
@@ -36,6 +36,8 @@ func HomePage(w http.ResponseWriter, req *http.Request) {
 	}
 	io.WriteString(w, string(body))
 }
+
+
 
 func LiveGames(w http.ResponseWriter, req *http.Request) {
 
@@ -55,7 +57,6 @@ func LiveGames(w http.ResponseWriter, req *http.Request) {
 	if partner == "" {
 		partner = "0"
 	}
-	client := api.GetClient(config.LoadConfig())
 	resp := client.GetTopLiveGames(partner)
 	if resp.StatusCode != http.StatusOK {
 		http.Error(w, "Steam api is down", 500)
@@ -91,7 +92,6 @@ func LiveGames(w http.ResponseWriter, req *http.Request) {
 func LiveGamesStats(w http.ResponseWriter, req *http.Request) {
 	SetDefaultHeaders(w)
 	serverSteamId := req.URL.Query().Get("server_steam_id")
-	client := api.GetClient(config.LoadConfig())
 	resp := client.GetRealTimeStats(serverSteamId)
 
 	if resp.Body == nil {
@@ -111,7 +111,6 @@ func LiveGamesStats(w http.ResponseWriter, req *http.Request) {
 
 func LeagueGames(w http.ResponseWriter, req *http.Request) {
 	SetDefaultHeaders(w)
-	client := api.GetClient(config.LoadConfig())
 	resp := client.GetLiveLeagueGames()
 
 	if resp.Body == nil {
