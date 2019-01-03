@@ -1,20 +1,22 @@
 package main
 
 import (
-	"net/http"
-	"io/ioutil"
-	"io"
-	"github.com/kYem/dota-dashboard/dota"
 	"encoding/json"
-	"log"
 	"github.com/kYem/dota-dashboard/api"
-	"github.com/kYem/dota-dashboard/config"
 	"github.com/kYem/dota-dashboard/cache"
+	"github.com/kYem/dota-dashboard/config"
+	"github.com/kYem/dota-dashboard/dota"
+	"github.com/kYem/dota-dashboard/stream"
+	"io"
+	"io/ioutil"
+	"log"
+	"net/http"
 )
 
 var client = api.GetClient(config.LoadConfig())
 
 func SetDefaultHeaders(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "application/json")
 	w.Header().Add("access-control-allow-credentials", "true")
 	w.Header().Add("access-control-allow-origin", "*")
 	w.Header().Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
@@ -74,6 +76,9 @@ func LiveGames(w http.ResponseWriter, req *http.Request) {
 	if err := json.NewDecoder(resp.Body).Decode(&liveGames); err != nil {
 		log.Println(err)
 	}
+
+	stream.AddStreamInfo(&liveGames)
+
 	// Send back
 	b, err := json.Marshal(liveGames)
 	if err != nil {

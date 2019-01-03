@@ -7,7 +7,6 @@ import (
 	"net/http"
 )
 
-const DotaGameId = "29595"
 var twitchClient = api.CreateTwitchClient()
 
 func Streams(w http.ResponseWriter, req *http.Request) {
@@ -15,7 +14,7 @@ func Streams(w http.ResponseWriter, req *http.Request) {
 	resp, err := twitchClient.GetStreams(&helix.StreamsParams{
 		First:    10,
 		Language: []string{"en"},
-		GameIDs: []string{DotaGameId},
+		GameIDs: []string{api.DotaGameId},
 	})
 	if err != nil {
 		// handle error
