@@ -2,12 +2,12 @@ package main
 
 import (
 	"bufio"
+	"github.com/kYem/dota-dashboard/ws"
 	"log"
 	"net/http"
 	"os"
 	"strings"
 	"text/template"
-	"github.com/kYem/dota-dashboard/ws"
 )
 
 func main() {
