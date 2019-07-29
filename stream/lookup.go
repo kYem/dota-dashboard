@@ -25,6 +25,10 @@ const (
 	Funkefal      = 101117815
 	GunnarDotA2   = 126238768
 	bobruhatv     = 86953944
+	Mickee        = 152962063
+	MickeeTwo     = 106755427
+	Febby         = 112377459
+	Mage		  = 178366364
 )
 
 var dotaToTwitchMap = map[int]string{
@@ -42,6 +46,10 @@ var dotaToTwitchMap = map[int]string{
 	Funkefal:      "126104914",
 	GunnarDotA2:   "131202285",
 	bobruhatv:     "116741333",
+	Mickee:        "266316098",
+	MickeeTwo:     "266316098",
+	Febby:         "87822995",
+	Mage:          "85002144",
 }
 
 var reverseLookup = map[string]int{}
@@ -75,7 +83,7 @@ func init() {
 
 var twitchClient = api.CreateTwitchClient()
 
-func fetchData (ids []string) []helix.Stream {
+func fetchData(ids []string) []helix.Stream {
 
 	// Add stream data
 	twitchResp, err := twitchClient.GetStreams(&helix.StreamsParams{
@@ -93,8 +101,7 @@ func fetchData (ids []string) []helix.Stream {
 	return twitchResp.Data.Streams
 }
 
-
-func LookupPlayers (list []dota.GameList) []helix.Stream  {
+func LookupPlayers(list []dota.GameList) []helix.Stream {
 
 	ids := dota.ExtractUserIds(list)
 
@@ -122,7 +129,6 @@ func lookupTwitchIds(userIds []int) []string {
 
 	return twitchUserIds
 }
-
 
 func AddStreamInfo(games *dota.TopLiveGames) *dota.TopLiveGames {
 
