@@ -34,6 +34,7 @@ func main() {
 	http.HandleFunc("/live", LiveGames)
 	http.HandleFunc("/matches", HomePage)
 	http.HandleFunc("/streams", Streams)
+	http.HandleFunc("/leaderboards", PassThrough)
 	ws.Init()
 	http.HandleFunc("/ws", ws.Handler)
 	log.Fatal(http.ListenAndServe(":8008", nil))

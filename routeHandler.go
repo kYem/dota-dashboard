@@ -14,6 +14,7 @@ import (
 )
 
 var client = api.GetClient(config.LoadConfig())
+var StratzClient = api.NewStratzClient("")
 
 func SetDefaultHeaders(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
@@ -132,3 +133,16 @@ func LeagueGames(w http.ResponseWriter, req *http.Request) {
 	json.NewEncoder(w).Encode(leagueGames)
 }
 
+
+func PassThrough(w http.ResponseWriter, req *http.Request) {
+	SetDefaultHeaders(w)
+	region := req.URL.Query().Get("region")
+	resp := StratzClient.GetSeasonLeaderBoard(region, 0, 100)
+
+	err := json.NewEncoder(w).Encode(resp)
+
+	if err != nil {
+		http.Error(w, "Error contact third party api", 500)
+		return
+	}
+}
