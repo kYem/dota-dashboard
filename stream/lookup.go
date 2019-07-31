@@ -106,7 +106,7 @@ func LookupPlayers(list []dota.GameList) []helix.Stream {
 	ids := dota.ExtractUserIds(list)
 
 	twitchIds := lookupTwitchIds(ids)
-	log.Info("Found twitch user ids", twitchIds)
+	log.Info("Found twitch user ids ", twitchIds)
 
 	if len(twitchIds) == 0 {
 		return []helix.Stream{}
@@ -143,10 +143,15 @@ func AddStreamInfo(games *dota.TopLiveGames) *dota.TopLiveGames {
 				//do something here
 				for _, stream := range steams {
 					if twitchId == stream.UserID {
-						log.Info("Found stream for user", player.AccountID)
+						log.Info("Found stream for user ", player.AccountID)
 						games.GameList[i].Players[playerKey].Stream = stream
 					}
 				}
+			}
+
+			if leaderboard, ok := api.DotaPlayers[player.AccountID]; ok {
+				log.Info("Found DotaPlayers user id ", player.AccountID)
+				games.GameList[i].Players[playerKey].LeaderboardRank = leaderboard.SteamAccount.SeasonLeaderboardRank
 			}
 		}
 	}

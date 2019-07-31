@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 var client = api.GetClient(config.LoadConfig())
@@ -62,6 +63,7 @@ func LiveGames(w http.ResponseWriter, req *http.Request) {
 	}
 	resp := client.GetTopLiveGames(partner)
 	if resp.StatusCode != http.StatusOK {
+		log.Printf("Received api %d\n", resp.StatusCode)
 		http.Error(w, "Steam api is down", 500)
 		return
 	}
@@ -137,12 +139,23 @@ func LeagueGames(w http.ResponseWriter, req *http.Request) {
 func PassThrough(w http.ResponseWriter, req *http.Request) {
 	SetDefaultHeaders(w)
 	region := req.URL.Query().Get("region")
-	resp := StratzClient.GetSeasonLeaderBoard(region, 0, 100)
+	skip := req.URL.Query().Get("start")
 
-	err := json.NewEncoder(w).Encode(resp)
+	i, err := strconv.ParseInt(skip, 10, 32)
+
+	var result int32 = 0
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+	} else {
+		result = int32(i)
+	}
+
+	resp := StratzClient.GetSeasonLeaderBoard(region, result, 100)
+
+	err = json.NewEncoder(w).Encode(resp)
 
 	if err != nil {
-		http.Error(w, "Error contact third party api", 500)
+		http.Error(w, "Error contacting third party api", 500)
 		return
 	}
 }
