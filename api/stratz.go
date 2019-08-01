@@ -65,7 +65,7 @@ func init() {
 	var take int32 = 100
 	for i := 0; i <= 3; i++ {
 		var start int32 = 0
-		for ;start < 500; {
+		for ;start < 300; {
 			url := client.GetSeasonLeaderBoardUrl(strconv.Itoa(i), start, take)
 			urls = append(urls, url)
 			start += take
@@ -74,7 +74,6 @@ func init() {
 
 	go func() {
 		results := BoundedParallelGet(urls, 2)
-		log.Printf("Received %d results", len(results))
 
 		for _, result := range results {
 			data := processResponse(result.err, &result.res)
@@ -85,7 +84,6 @@ func init() {
 
 		log.Printf("Added users count Stratz %d\n", len(DotaPlayers))
 	}()
-
 }
 
 func NewStratzClient(hostname string) *StratzClient {
