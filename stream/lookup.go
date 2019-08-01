@@ -150,7 +150,6 @@ func AddStreamInfo(games *dota.TopLiveGames) *dota.TopLiveGames {
 			}
 
 			if leaderboard, ok := api.DotaPlayers[player.AccountID]; ok {
-				log.Info("Found DotaPlayers user id ", player.AccountID)
 				games.GameList[i].Players[playerKey].LeaderboardRank = leaderboard.SteamAccount.SeasonLeaderboardRank
 			}
 		}

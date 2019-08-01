@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
@@ -60,21 +61,31 @@ func init() {
 
 	client := NewStratzClient("")
 
+	var urls []string
 	var take int32 = 100
 	for i := 0; i <= 3; i++ {
-		log.Printf("Looking up region %d", i)
 		var start int32 = 0
-		for ;start <= 500; {
-			log.Printf("Stratz looking up region %d, start %d\n", i, start)
-			resp := client.GetSeasonLeaderBoard(strconv.Itoa(i), start, 100)
-			for _, player := range resp.Players {
-				DotaPlayers[player.SteamAccount.ID] = player
-			}
+		for ;start < 500; {
+			url := client.GetSeasonLeaderBoardUrl(strconv.Itoa(i), start, take)
+			urls = append(urls, url)
 			start += take
 		}
 	}
 
-	log.Printf("Added users count Stratz %d\n", len(DotaPlayers))
+	go func() {
+		results := BoundedParallelGet(urls, 2)
+		log.Printf("Received %d results", len(results))
+
+		for _, result := range results {
+			data := processResponse(result.err, &result.res)
+			for _, player := range data.Players {
+				DotaPlayers[player.SteamAccount.ID] = player
+			}
+		}
+
+		log.Printf("Added users count Stratz %d\n", len(DotaPlayers))
+	}()
+
 }
 
 func NewStratzClient(hostname string) *StratzClient {
@@ -84,26 +95,40 @@ func NewStratzClient(hostname string) *StratzClient {
 	return &StratzClient{hostname: hostname}
 }
 
-func (client *StratzClient) GetSeasonLeaderBoard(region string, skip int32, take int32) LeaderBoardDivisionResponse {
+func (client *StratzClient) GetSeasonLeaderBoardUrl(region string, skip int32, take int32) string {
 
-	url := fmt.Sprintf(
+	return fmt.Sprintf(
 		"%s/Player/seasonLeaderBoard?&leaderBoardDivision=%s&skip=%d&take=%d",
 		client.hostname,
 		region,
 		skip,
 		take,
 	)
-	log.Printf("GetSeasonLeaderBoard: %s", url)
+}
+
+func (client *StratzClient) GetSeasonLeaderBoard(region string, skip int32, take int32) LeaderBoardDivisionResponse {
+
+	url := client.GetSeasonLeaderBoardUrl(region, skip, take)
 	resp, err := http.Get(url)
 
-	if err != nil {
-		log.Printf("GetTopLiveGames: failed: %s", err)
-	}
+	return processResponse(err, resp)
+}
 
+func processResponse(err error, resp *http.Response) LeaderBoardDivisionResponse {
+	if err != nil {
+		log.Printf("GetSeasonLeaderBoard: failed: %s", err)
+	}
 	var leaderBoardResp LeaderBoardDivisionResponse
 	if err := json.NewDecoder(resp.Body).Decode(&leaderBoardResp); err != nil {
-		log.Println("Failed to load Leader boards", err, resp.Body)
-	}
 
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Printf("Failed to load Leader boards, %s, %s", err.Error(), string(body))
+		}
+		closeError := resp.Body.Close()
+		if closeError != nil {
+			log.Println("Error closing", closeError)
+		}
+	}
 	return leaderBoardResp
 }
