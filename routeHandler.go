@@ -132,7 +132,10 @@ func LeagueGames(w http.ResponseWriter, req *http.Request) {
 	if err := json.NewDecoder(resp.Body).Decode(&leagueGames); err != nil {
 		log.Println(err)
 	}
-	json.NewEncoder(w).Encode(leagueGames)
+	err := json.NewEncoder(w).Encode(leagueGames)
+	if err != nil {
+		log.Println("Failed to Encode LeagueGames")
+	}
 }
 
 
