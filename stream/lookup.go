@@ -29,6 +29,7 @@ const (
 	MickeeTwo     = 106755427
 	Febby         = 112377459
 	Mage		  = 178366364
+	SingSing      = 19757254
 )
 
 var dotaToTwitchMap = map[int]string{
@@ -50,6 +51,7 @@ var dotaToTwitchMap = map[int]string{
 	MickeeTwo:     "266316098",
 	Febby:         "87822995",
 	Mage:          "85002144",
+	SingSing: 	   "21390470",
 }
 
 var reverseLookup = map[string]int{}
