@@ -30,6 +30,10 @@ func (client *client) GetMatchHistory(matchId string) (*http.Response) {
 
 
 
+// 0 NA or combined?
+// 1 China
+// 2 Europe (West)
+// 3 South America
 func (client *client) GetTopLiveGames(partner string) (*http.Response) {
 
 	url := fmt.Sprintf("%s&partner=%s", client.getMatchUrl("GetTopLiveGame"), partner)
