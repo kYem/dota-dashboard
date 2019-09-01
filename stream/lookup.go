@@ -2,34 +2,49 @@ package stream
 
 import (
 	"encoding/json"
+	"io/ioutil"
+	"os"
+
 	"github.com/kYem/dota-dashboard/api"
 	"github.com/kYem/dota-dashboard/dota"
 	"github.com/nicklaw5/helix"
 	log "github.com/sirupsen/logrus"
-	"io/ioutil"
-	"os"
 )
 
 const (
-	gorgc         = 56939869
-	cancel        = 141690233
-	Kingteka      = 242697694
-	SexyBamboe    = 20321748
-	PurgeGamers   = 66296404
-	absolutHabibi = 140873889
-	JustCooman    = 175463659
-	SyndereN      = 4281729
-	KheZu         = 169025618
-	Ghostik       = 82297531
-	Mason         = 315657960
-	Funkefal      = 101117815
-	GunnarDotA2   = 126238768
-	bobruhatv     = 86953944
-	Mickee        = 152962063
-	MickeeTwo     = 106755427
-	Febby         = 112377459
-	Mage		  = 178366364
-	SingSing      = 19757254
+	gorgc           = 56939869
+	cancel          = 141690233
+	Kingteka        = 242697694
+	SexyBamboe      = 20321748
+	PurgeGamers     = 66296404
+	absolutHabibi   = 140873889
+	JustCooman      = 175463659
+	SyndereN        = 4281729
+	KheZu           = 169025618
+	Ghostik         = 82297531
+	Mason           = 315657960
+	Funkefal        = 101117815
+	GunnarDotA2     = 126238768
+	bobruhatv       = 86953944
+	Mickee          = 152962063
+	MickeeTwo       = 106755427
+	Febby           = 112377459
+	Mage            = 178366364
+	SingSing        = 19757254
+	Wagamama        = 32995405
+	inboss1k        = 842068996
+	eskobartv       = 246953032
+	meepoha3ap      = 183602223
+	eternalenvyy    = 43276219
+	monkeysForever  = 86811043
+	siractionslacks = 68186278
+	roccodota       = 106932684
+	universe        = 87276347
+	noctisak47      = 101239422
+	yoyuou          = 170773146
+	lukiluki        = 117311875
+	bububu          = 106381989
+	threethree      = 86698277
 )
 
 var dotaToTwitchMap = map[int]string{
@@ -51,7 +66,28 @@ var dotaToTwitchMap = map[int]string{
 	MickeeTwo:     "266316098",
 	Febby:         "87822995",
 	Mage:          "85002144",
-	SingSing: 	   "21390470",
+	SingSing:      "21390470",
+
+	// ybicanoooobov
+	64607133:  "68950614",
+	190769379: "68950614",
+	199194550: "68950614",
+	206967271: "68950614",
+
+	Wagamama:        "24811779",
+	inboss1k:        "431644708",
+	eskobartv:       "140883424",
+	meepoha3ap:      "85674261",
+	eternalenvyy:    "26954716",
+	monkeysForever:  "34932688",
+	siractionslacks: "21379187",
+	roccodota:       "65421010",
+	universe:        "32556389",
+	noctisak47:      "141414675",
+	yoyuou:          "41727944",
+	lukiluki:        "36945314",
+	bububu:          "22573825",
+	threethree:      "132521253",
 }
 
 var reverseLookup = map[string]int{}
