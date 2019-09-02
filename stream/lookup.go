@@ -165,7 +165,7 @@ func fetchData(ids []string) []helix.Stream {
 		UserIDs: ids,
 	})
 	if err != nil {
-		log.Error(err)
+		log.Error("ERROR from Twitch", err)
 	}
 
 	if twitchResp.Error != "" {
