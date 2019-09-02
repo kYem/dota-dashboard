@@ -91,7 +91,7 @@ func (match *SteamDotaMatch) MarshalJSON() ([]byte, error) {
 	type Alias SteamDotaMatch
 	return json.Marshal(&struct {
 		MatchId string `json:"match_id"`
-		ServerSteamID string `json:"server_steam_id"`
+		ServerSteamID string `json:"serverStreamId"`
 		*Alias
 	}{
 		MatchId: strconv.FormatInt(match.MatchId, 10) ,

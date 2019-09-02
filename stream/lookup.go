@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"strconv"
 
 	"github.com/kYem/dota-dashboard/api"
 	"github.com/kYem/dota-dashboard/dota"
@@ -90,11 +91,31 @@ var dotaToTwitchMap = map[int]string{
 	threethree:      "132521253",
 }
 
-var reverseLookup = map[string]int{}
 
 var proPlayers []dota.ProPlayer
 
+type twitchMap struct {
+	SteamId     string `json:"steamId"`
+	TwitchLogin string `json:"twitchLogin"`
+	TwitchId    string `json:"twitchId"`
+}
+
 func init() {
+	loadProPlayers()
+
+	twitchPlayers := loadExtraTwitchPlayers()
+	for _, twitchData := range twitchPlayers {
+		i, err := strconv.Atoi(twitchData.SteamId)
+		if err != nil {
+			log.Fatal(err)
+		}
+		dotaToTwitchMap[i] = twitchData.TwitchId
+	}
+
+	log.Info("Loaded twitch player map: ", len(dotaToTwitchMap))
+}
+
+func loadProPlayers() {
 	// Open our jsonFile
 	jsonFile, err := os.Open("data/pro-players.json")
 	// if we os.Open returns an error then handle it
@@ -104,19 +125,34 @@ func init() {
 	log.Info("Successfully Opened pro-players.json")
 	// defer the closing of our jsonFile so that we can parse it later on
 	defer jsonFile.Close()
-
 	byteValue, _ := ioutil.ReadAll(jsonFile)
-
-	err = json.Unmarshal([]byte(byteValue), &proPlayers)
+	err = json.Unmarshal(byteValue, &proPlayers)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	log.Info("Successfully Loaded pro-players.json")
+}
 
-	for dotaId, twitchId := range dotaToTwitchMap {
-		reverseLookup[twitchId] = dotaId
+func loadExtraTwitchPlayers() []twitchMap {
+	// Open our jsonFile
+	jsonFile, err := os.Open("data/twitch.json")
+	// if we os.Open returns an error then handle it
+	if err != nil {
+		log.Fatal(err)
 	}
+	log.Info("Successfully Opened twitch.json")
+	// defer the closing of our jsonFile so that we can parse it later on
+	defer jsonFile.Close()
+
+	var twitchPlayers []twitchMap
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+	err = json.Unmarshal(byteValue, &twitchPlayers)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Info("Successfully Loaded twitch.json")
+
+	return twitchPlayers
 }
 
 var twitchClient = api.CreateTwitchClient()
@@ -133,7 +169,7 @@ func fetchData(ids []string) []helix.Stream {
 	}
 
 	if twitchResp.Error != "" {
-		log.Error(err)
+		log.Error(twitchResp.ErrorMessage)
 	}
 
 	return twitchResp.Data.Streams
@@ -144,24 +180,22 @@ func LookupPlayers(list []dota.GameList) []helix.Stream {
 	ids := dota.ExtractUserIds(list)
 
 	twitchIds := lookupTwitchIds(ids)
-	log.Info("Found twitch user ids ", twitchIds)
 
 	if len(twitchIds) == 0 {
 		return []helix.Stream{}
 	}
 
+	log.Info("Found twitch user ids", twitchIds, len(twitchIds))
 	data := fetchData(twitchIds)
 
 	return data
 }
 
 func lookupTwitchIds(userIds []int) []string {
-	twitchUserIds := make([]string, 0)
-
+	var twitchUserIds []string
 	for _, id := range userIds {
 		if val, ok := dotaToTwitchMap[id]; ok {
 			twitchUserIds = append(twitchUserIds, val)
-			//do something here
 		}
 	}
 

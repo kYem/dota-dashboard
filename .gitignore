@@ -2,4 +2,4 @@ tmp
 .idea
 dota-dashboard
 
-stream/twitch.json
+data/twitch.json
