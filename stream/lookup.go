@@ -185,10 +185,7 @@ func LookupPlayers(list []dota.GameList) []helix.Stream {
 		return []helix.Stream{}
 	}
 
-	log.Info("Found twitch user ids", twitchIds, len(twitchIds))
-	data := fetchData(twitchIds)
-
-	return data
+	return fetchData(twitchIds)
 }
 
 func lookupTwitchIds(userIds []int) []string {
