@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	"sync"
-	"github.com/garyburd/redigo/redis"
+	"github.com/gomodule/redigo/redis"
 	"strings"
 	"errors"
 	"time"

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"github.com/gorilla/websocket"
 	"fmt"
-	"github.com/garyburd/redigo/redis"
+	"github.com/gomodule/redigo/redis"
 	"github.com/kYem/dota-dashboard/dota"
 	"github.com/kYem/dota-dashboard/cache"
 )
