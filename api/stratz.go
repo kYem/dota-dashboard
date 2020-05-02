@@ -16,37 +16,63 @@ type StratzClient struct {
 type StratzPlayer struct {
 	SteamAccount struct {
 		ID                          int    `json:"id"`
+		SteamID                     int    `json:"steamId"`
+		LastActiveTime              string `json:"lastActiveTime"`
+		ProfileURI                  string `json:"profileUri"`
+		TimeCreated                 int    `json:"timeCreated"`
+		CityID                      int    `json:"cityId"`
+		CommunityVisibleState       int    `json:"communityVisibleState"`
 		Name                        string `json:"name"`
 		Avatar                      string `json:"avatar"`
+		PrimaryClanID               int64  `json:"primaryClanId"`
+		SoloRank                    int    `json:"soloRank"`
+		PartyRank                   int    `json:"partyRank"`
+		IsDotaPlusSubscriber        bool   `json:"isDotaPlusSubscriber"`
+		DotaPlusOriginalStartDate   int    `json:"dotaPlusOriginalStartDate"`
 		IsAnonymous                 bool   `json:"isAnonymous"`
 		IsStratzAnonymous           bool   `json:"isStratzAnonymous"`
 		SeasonRank                  int    `json:"seasonRank"`
 		SeasonLeaderboardRank       int    `json:"seasonLeaderboardRank"`
 		SeasonLeaderboardDivisionID int    `json:"seasonLeaderboardDivisionId"`
 		ProSteamAccount             struct {
-			SteamID       int    `json:"steamId"`
-			Name          string `json:"name"`
-			RealName      string `json:"realName"`
-			FantasyRole   int    `json:"fantasyRole"`
-			TeamID        int    `json:"teamId"`
-			Sponsor       string `json:"sponsor"`
-			IsLocked      bool   `json:"isLocked"`
-			IsPro         bool   `json:"isPro"`
-			TotalEarnings int    `json:"totalEarnings"`
+			SteamID         int      `json:"steamId"`
+			Name            string   `json:"name"`
+			RealName        string   `json:"realName"`
+			FantasyRole     int      `json:"fantasyRole"`
+			TeamID          int      `json:"teamId"`
+			Sponsor         string   `json:"sponsor"`
+			IsLocked        bool     `json:"isLocked"`
+			IsPro           bool     `json:"isPro"`
+			TotalEarnings   int      `json:"totalEarnings"`
+			Roles           int      `json:"roles"`
+			Aliases         []string `json:"aliases"`
+			Statuses        int      `json:"statuses"`
+			TwitterLink     string   `json:"twitterLink"`
+			TwitchLink      string   `json:"twitchLink"`
+			InstagramLink   string   `json:"instagramLink"`
+			FacebookLink    string   `json:"facebookLink"`
+			SignatureHeroes []string `json:"signatureHeroes"`
+			Countries       []string `json:"countries"`
+			TiWins          int      `json:"tiWins"`
+			IsTIWinner      bool     `json:"isTIWinner"`
 		} `json:"proSteamAccount"`
+		SmurfFlag         int `json:"smurfFlag"`
+		SmurfCheckDate    int `json:"smurfCheckDate"`
+		LastMatchDateTime int `json:"lastMatchDateTime"`
+		LastMatchRegionID int `json:"lastMatchRegionId"`
 	} `json:"steamAccount"`
 	LastUpdateDateTime int `json:"lastUpdateDateTime"`
 	RankVariance       int `json:"rankVariance"`
+	MatchCount         int `json:"matchCount"`
+	CoreCount          int `json:"coreCount"`
+	SupportCount       int `json:"supportCount"`
 	Imp                int `json:"imp"`
-	Activity           int `json:"activity"`
-	MatchCount         int `json:"matchCount,omitempty"`
-	CoreCount          int `json:"coreCount,omitempty"`
-	SupportCount       int `json:"supportCount,omitempty"`
 	Heroes             []struct {
 		HeroID    int `json:"heroId"`
 		WinCount  int `json:"winCount"`
 		LossCount int `json:"lossCount"`
-	} `json:"heroes,omitempty"`
+	} `json:"heroes"`
+	Activity int `json:"activity"`
 }
 
 type LeaderBoardDivisionResponse struct {
