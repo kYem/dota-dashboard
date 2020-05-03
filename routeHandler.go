@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"github.com/kYem/dota-dashboard/api"
 	"github.com/kYem/dota-dashboard/cache"
-	"github.com/kYem/dota-dashboard/config"
 	"github.com/kYem/dota-dashboard/dota"
 	"github.com/kYem/dota-dashboard/storage"
 	"github.com/kYem/dota-dashboard/stream"
@@ -15,7 +14,6 @@ import (
 	"strconv"
 )
 
-var client = api.GetClient(config.LoadConfig())
 var StratzClient = api.NewStratzClient("")
 
 func SetDefaultHeaders(w http.ResponseWriter) {
@@ -27,7 +25,7 @@ func SetDefaultHeaders(w http.ResponseWriter) {
 
 func HomePage(w http.ResponseWriter, req *http.Request) {
 
-	resp := client.GetTopLiveGames("1")
+	resp := api.SteamApi.GetTopLiveGames("1")
 
 	if resp.Body == nil {
 		http.Error(w, "Please send a request body", 400)
@@ -62,7 +60,7 @@ func LiveGames(w http.ResponseWriter, req *http.Request) {
 	if partner == "" {
 		partner = "0"
 	}
-	resp := client.GetTopLiveGames(partner)
+	resp := api.SteamApi.GetTopLiveGames(partner)
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("Received api %d\n", resp.StatusCode)
 		http.Error(w, "Steam api is down", 500)
@@ -106,7 +104,7 @@ func LiveGames(w http.ResponseWriter, req *http.Request) {
 func LiveGamesStats(w http.ResponseWriter, req *http.Request) {
 	SetDefaultHeaders(w)
 	serverSteamId := req.URL.Query().Get("server_steam_id")
-	resp := client.GetRealTimeStats(serverSteamId)
+	resp := api.SteamApi.GetRealTimeStats(serverSteamId)
 
 	if resp.Body == nil {
 		http.Error(w, "Please send a request body", 400)
@@ -131,7 +129,7 @@ func LiveGamesStats(w http.ResponseWriter, req *http.Request) {
 
 func LeagueGames(w http.ResponseWriter, _ *http.Request) {
 	SetDefaultHeaders(w)
-	resp := client.GetLiveLeagueGames()
+	resp := api.SteamApi.GetLiveLeagueGames()
 
 	if resp.Body == nil {
 		http.Error(w, "Please send a request body", 400)

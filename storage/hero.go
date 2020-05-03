@@ -3,7 +3,6 @@ package storage
 import (
 	"encoding/json"
 	"github.com/kYem/dota-dashboard/api"
-	"github.com/kYem/dota-dashboard/config"
 	"github.com/kYem/dota-dashboard/dota"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -19,7 +18,6 @@ const (
 
 var heroMap = map[int]dota.Hero {}
 
-var steamApi = api.GetClient(config.LoadConfig())
 
 func init() {
 	populateHeroMap()
@@ -40,7 +38,7 @@ func loadHeroes() {
 }
 
 func getHeroes() ([]dota.HeroBasic, error) {
-	heroes, err := steamApi.GetHeroes()
+	heroes, err := api.SteamApi.GetHeroes()
 	if err == nil {
 		writeHeroJson(heroes)
 		return heroes, nil
