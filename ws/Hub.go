@@ -38,6 +38,7 @@ func (s *Store) newUser(conn *websocket.Conn) *User {
 
 func (s *Store) Subscribe(u *User, channelName string) error {
 
+	s.Lock()
 	if _, ok := s.Channels[channelName]; !ok {
 		fmt.Sprintf("Creating empty channel %s \n", channelName)
 		s.Channels[channelName] = make(map[string]*User)
@@ -49,6 +50,7 @@ func (s *Store) Subscribe(u *User, channelName string) error {
 
 	s.Channels[channelName][u.ID] = u
 	u.addChannel(channelName)
+	s.Unlock()
 
 	return nil
 }
@@ -115,6 +117,7 @@ func (s *Store) findAndDeliver(channel string, content string) {
 		Success: true,
 	}
 
+	s.Lock()
 	if _, ok := s.Channels[channel]; ok {
 		log.Infof("Broadcasting to %s, user count %d \n", channel, len(s.Channels[channel]))
 		start := time.Now()
@@ -126,6 +129,7 @@ func (s *Store) findAndDeliver(channel string, content string) {
 	} else {
 		log.Errorf("Channel %s not found at our store\n", channel)
 	}
+	s.Unlock()
 }
 
 func (s *Store) removeUser(u *User) {
@@ -140,11 +144,6 @@ func (s *Store) removeUser(u *User) {
 		}
 	}
 	s.Unlock()
-
-	err := u.conn.Close()
-	if err != nil {
-		log.Errorf("Failed to close user connection %v", err)
-	}
 }
 
 func (s *Store) removeUserFromChannels(u *User) {

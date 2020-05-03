@@ -90,6 +90,11 @@ func (u *User) readPump() {
 			log.Errorf("Failed to subscribeMatch %v", err)
 		}
 	}
+
+	err := u.conn.Close()
+	if err != nil {
+		log.Errorf("Failed to close user connection %v", err)
+	}
 }
 
 func (u *User) addChannel(channelName string) {

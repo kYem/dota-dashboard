@@ -57,7 +57,6 @@ func (r *RedisStorage) Get(key string) (string, error) {
 	resp, err := redis.String(c.Do("GET", key))
 
 	if err != nil {
-		log.Printf("cache: Marshal key=%q failed: %s", key, err)
 		return "", err
 	}
 
