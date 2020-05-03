@@ -6,6 +6,7 @@ import (
 	"github.com/kYem/dota-dashboard/cache"
 	"github.com/kYem/dota-dashboard/config"
 	"github.com/kYem/dota-dashboard/dota"
+	"github.com/kYem/dota-dashboard/storage"
 	"github.com/kYem/dota-dashboard/stream"
 	"io"
 	"io/ioutil"
@@ -81,6 +82,11 @@ func LiveGames(w http.ResponseWriter, req *http.Request) {
 	}
 
 	stream.AddStreamInfo(&liveGames)
+	for i, game := range liveGames.GameList {
+		for playerKey, player := range game.Players {
+			liveGames.GameList[i].Players[playerKey].Hero = storage.HeroById(player.HeroID)
+		}
+	}
 
 	// Send back
 	b, err := json.Marshal(liveGames)

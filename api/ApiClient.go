@@ -1,10 +1,12 @@
 package api
 
 import (
-	"log"
-	"net/http"
+	"encoding/json"
 	"fmt"
 	"github.com/kYem/dota-dashboard/config"
+	"github.com/kYem/dota-dashboard/dota"
+	log "github.com/sirupsen/logrus"
+	"net/http"
 )
 
 const VERSION = "v001"
@@ -16,7 +18,7 @@ type client struct {
 	apiKey        string
 }
 
-func (client *client) GetMatchHistory(matchId string) (*http.Response) {
+func (client *client) GetMatchHistory(matchId string) *http.Response {
 
 	url := fmt.Sprintf("%s&match_id=%s", client.getMatchUrl("GetMatchDetails"), matchId)
 	resp, err := http.Get(url)
@@ -34,7 +36,7 @@ func (client *client) GetMatchHistory(matchId string) (*http.Response) {
 // 1 China
 // 2 Europe (West)
 // 3 South America
-func (client *client) GetTopLiveGames(partner string) (*http.Response) {
+func (client *client) GetTopLiveGames(partner string) *http.Response {
 
 	url := fmt.Sprintf("%s&partner=%s", client.getMatchUrl("GetTopLiveGame"), partner)
 	resp, err := http.Get(url)
@@ -58,7 +60,7 @@ func (client *client) getMatchUrl(endpoint string) string {
 	)
 }
 
-func (client *client) GetRealTimeStats(serverSteamId string) (*http.Response) {
+func (client *client) GetRealTimeStats(serverSteamId string) *http.Response {
 
 	url := fmt.Sprintf("%s&server_steam_id=%s", client.getMatchStatsUrl("GetRealTimeStats"), serverSteamId)
 	resp, err := http.Get(url)
@@ -70,7 +72,7 @@ func (client *client) GetRealTimeStats(serverSteamId string) (*http.Response) {
 	return resp
 }
 
-func (client *client) GetLiveLeagueGames() (*http.Response) {
+func (client *client) GetLiveLeagueGames() *http.Response {
 	resp, err := http.Get(client.getMatchUrl("GetLiveLeagueGames"))
 	if err != nil {
 		panic(err)
@@ -91,6 +93,41 @@ func (client *client) getMatchStatsUrl(endpoint string) string {
 	)
 }
 
+func (client *client) getEconUrl(endpoint string) string {
+	return fmt.Sprintf(
+		"%s://%s/%s/%s/%s?key=%s",
+		client.schema,
+		client.hostname,
+		"IEconDOTA2_570",
+		endpoint,
+		"v1",
+		client.apiKey,
+	)
+}
+
+func (client *client) GetHeroes() ([]dota.HeroBasic, error) {
+	resp, err := http.Get(client.getEconUrl("GetHeroes"))
+
+
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.Body == nil {
+		return nil, err
+	}
+
+	var heroes dota.GetHeroes
+	if err := json.NewDecoder(resp.Body).Decode(&heroes); err != nil {
+		log.Println(err)
+	}
+	err = resp.Body.Close()
+	if err != nil {
+		log.Println(err)
+	}
+
+	return heroes.Result.Heroes, err
+}
 
 func GetClient(config config.ValveApiConfig) client {
 	return client{
