@@ -42,7 +42,6 @@ func (r *RedisStorage) Set(key string, value string, expiration int32) error {
 
 	var err error
 	c:= r.Pool.Get()
-	log.Printf("Params %s:%d.", key, expiration)
 	_, err = c.Do("SETEX", key, expiration, value)
 	if err != nil {
 		log.Printf("Could not SET %s:%s.", key, err)

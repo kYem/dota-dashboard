@@ -1,13 +1,12 @@
 package ws
 
 import (
+	"github.com/gomodule/redigo/redis"
+	"github.com/gorilla/websocket"
+	"github.com/kYem/dota-dashboard/cache"
+	"github.com/kYem/dota-dashboard/dota"
 	log "github.com/sirupsen/logrus"
 	"net/http"
-	"github.com/gorilla/websocket"
-	"fmt"
-	"github.com/gomodule/redigo/redis"
-	"github.com/kYem/dota-dashboard/dota"
-	"github.com/kYem/dota-dashboard/cache"
 )
 
 const (
@@ -22,22 +21,10 @@ var (
 type LiveMatchParams struct {
 	ServerSteamID string `json:"server_steam_id"`
 }
-type WsRequest struct {
+type Request struct {
 	Event string
 	Reference string
 	Params LiveMatchParams
-}
-
-type WsError struct {
-	Event string `json:"event"`
-	Success bool `json:"success"`
-	Error string
-}
-
-type MatchResponse struct {
-	Event string `json:"event"`
-	Data dota.LiveMatch `json:"data"`
-	Success bool `json:"success"`
 }
 
 type ApiMatchResponse struct {
@@ -74,25 +61,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	u := gStore.newUser(conn)
 
 	go u.writePump()
-
-	for {
-
-		// receive JSON type T
-		var data WsRequest
-		if err = conn.ReadJSON(&data); err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure, websocket.CloseNoStatusReceived) {
-				log.Errorf("Unexpected close error: %v", err)
-			}
-			gStore.removeUser(u)
-			break
-		}
-
-		err := gStore.SubscribeMatch(u, channelLiveMatchPrefix+data.Params.ServerSteamID)
-		if err != nil {
-			log.Errorf("Failed to subscribeMatch %v", err)
-		}
-
-	}
+	u.readPump()
 }
 
 func GetConn() *redis.PubSubConn  {
@@ -101,11 +70,6 @@ func GetConn() *redis.PubSubConn  {
 
 	log.Printf("Active connections %d", cache.Pool.ActiveCount())
 	pubSub := &redis.PubSubConn{Conn: c}
-
-	if pubSub == nil {
-		fmt.Println("Failed to get pubSub con")
-	}
-
 	return pubSub
 }
 

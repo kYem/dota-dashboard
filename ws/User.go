@@ -1,8 +1,8 @@
 package ws
 
 import (
-	log "github.com/sirupsen/logrus"
 	"github.com/gorilla/websocket"
+	log "github.com/sirupsen/logrus"
 	"time"
 )
 
@@ -60,6 +60,34 @@ func (u *User) writePump() {
 				log.Errorf("error on message delivery through ws. e: %s\n", err)
 				gStore.removeUser(u)
 			}
+		}
+	}
+}
+
+func (u *User) readPump() {
+
+	u.conn.SetReadLimit(maxMessageSize)
+	_ = u.conn.SetReadDeadline(time.Now().Add(pongWait))
+	u.conn.SetPongHandler(
+		func(string) error {
+			_ = u.conn.SetReadDeadline(time.Now().Add(pongWait))
+			return nil
+		})
+
+	for {
+		// receive JSON type T
+		var request Request
+		if err := u.conn.ReadJSON(&request); err != nil {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure, websocket.CloseNoStatusReceived) {
+				log.Errorf("Unexpected close error: %v", err)
+			}
+			gStore.removeUser(u)
+			break
+		}
+
+		err := gStore.SubscribeMatch(u, channelLiveMatchPrefix+request.Params.ServerSteamID)
+		if err != nil {
+			log.Errorf("Failed to subscribeMatch %v", err)
 		}
 	}
 }

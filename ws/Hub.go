@@ -131,8 +131,6 @@ func (s *Store) findAndDeliver(channel string, content string) {
 func (s *Store) removeUser(u *User) {
 
 	s.Lock()
-	defer s.Unlock()
-
 	s.removeUserFromChannels(u)
 
 	for i, storeUser := range s.Users {
@@ -141,6 +139,7 @@ func (s *Store) removeUser(u *User) {
 			log.Debugf("Removed user %s from store \n", u.ID)
 		}
 	}
+	s.Unlock()
 
 	err := u.conn.Close()
 	if err != nil {
