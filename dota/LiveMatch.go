@@ -6,10 +6,11 @@ import (
 )
 
 type SteamDotaPlayer struct {
-	AccountId    int     `json:"accountid"`
-	PlayerId     int     `json:"playerid"`
-	HeroId       int     `json:"heroid"`
+	AccountId int `json:"accountid"`
+	PlayerId  int `json:"playerid"`
+	HeroId    int `json:"heroid"`
 	PlayerStats
+	Hero Hero `json:"hero"`
 }
 
 type PlayerStats struct {
@@ -38,6 +39,7 @@ type Player struct {
 	PlayerId     int     `json:"player_id"`
 	HeroId       int     `json:"hero_id"`
 	PlayerStats
+	Hero Hero `json:"hero"`
 }
 
 type TeamDetails struct {

@@ -119,11 +119,17 @@ func LiveGamesStats(w http.ResponseWriter, req *http.Request) {
 	if err := json.NewDecoder(resp.Body).Decode(&match); err != nil {
 		log.Println(err)
 	}
+
+	for i, game := range match.Teams {
+		for playerKey, player := range game.Players {
+			match.Teams[i].Players[playerKey].Hero = storage.HeroById(player.HeroId)
+		}
+	}
 	// Send back
 	json.NewEncoder(w).Encode(match)
 }
 
-func LeagueGames(w http.ResponseWriter, req *http.Request) {
+func LeagueGames(w http.ResponseWriter, _ *http.Request) {
 	SetDefaultHeaders(w)
 	resp := client.GetLiveLeagueGames()
 
