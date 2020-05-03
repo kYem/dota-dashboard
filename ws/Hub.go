@@ -1,17 +1,17 @@
 package ws
 
 import (
-	"github.com/satori/go.uuid"
-	"log"
-	"fmt"
-	"github.com/gorilla/websocket"
-	"sync"
-	"github.com/gomodule/redigo/redis"
-	"strings"
-	"errors"
-	"time"
-	"github.com/kYem/dota-dashboard/dota"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"github.com/gomodule/redigo/redis"
+	"github.com/gorilla/websocket"
+	"github.com/kYem/dota-dashboard/dota"
+	"github.com/satori/go.uuid"
+	log "github.com/sirupsen/logrus"
+	"strings"
+	"sync"
+	"time"
 )
 
 // Store holds the collection of users connected through websocket
@@ -29,7 +29,6 @@ func (s *Store) newUser(conn *websocket.Conn) *User {
 		Channels: make([]string, 0, 1),
 		send: make(chan *ApiMatchResponse),
 	}
-	log.Printf("Adding new user %s\n", u.ID)
 	s.Lock()
 	defer s.Unlock()
 
@@ -46,7 +45,6 @@ func (s *Store) Subscribe(u *User, channelName string) error {
 		if conErr := gPubSubConn.Subscribe(channelName); conErr != nil {
 			return conErr
 		}
-		log.Printf("subscribed to live info for %s", channelName)
 	}
 
 	s.Channels[channelName][u.ID] = u
@@ -58,15 +56,15 @@ func (s *Store) Subscribe(u *User, channelName string) error {
 func (s *Store) Unsubscribe(u *User, channelName string) {
 
 	if _, ok := s.Channels[channelName]; !ok {
-		log.Printf("Trying to unsubscribe from non existant channel %s \n", channelName)
+		log.Printf("Trying to unsubscribe from non existing channel %s \n", channelName)
 	}
 
 	delete(s.Channels[channelName], u.ID)
 	u.removeChannel(channelName)
-	log.Printf("store remove user %s subscribtion %s\n", u.ID, channelName)
+	log.Debugf("store remove user %s subscription %s\n", u.ID, channelName)
 
 	remaining := len(s.Channels[channelName])
-	log.Printf("channel %s have %d subs remaining\n", channelName, remaining)
+	log.Debugf("channel %s have %d subs remaining\n", channelName, remaining)
 
 	if remaining == 0 {
 		s.removeChannel(channelName)
@@ -108,7 +106,7 @@ func (s *Store) findAndDeliver(channel string, content string) {
 
 	var match dota.ApiLiveMatch
 	if err := json.Unmarshal([]byte(content), &match); err != nil {
-		log.Println(err)
+		log.Error(err)
 	}
 
 	wsResp := &ApiMatchResponse{
@@ -118,15 +116,15 @@ func (s *Store) findAndDeliver(channel string, content string) {
 	}
 
 	if _, ok := s.Channels[channel]; ok {
-		log.Printf("Broadcasting to %s, user count %d \n", channel, len(s.Channels[channel]))
+		log.Infof("Broadcasting to %s, user count %d \n", channel, len(s.Channels[channel]))
 		start := time.Now()
 		for _, u := range s.Channels[channel] {
 			s.Channels[channel][u.ID].send <- wsResp
 		}
 		elapsed := time.Since(start)
-		log.Printf("Delivered in took %s", elapsed)
+		log.Infof("Delivered in took %s", elapsed)
 	} else {
-		log.Printf("Channel %s not found at our store\n", channel)
+		log.Errorf("Channel %s not found at our store\n", channel)
 	}
 }
 
@@ -140,8 +138,13 @@ func (s *Store) removeUser(u *User) {
 	for i, storeUser := range s.Users {
 		if storeUser == u {
 			s.Users = append(s.Users[:i], s.Users[i+1:]...)
-			log.Printf("Removed user %s from store \n", u.ID)
+			log.Debugf("Removed user %s from store \n", u.ID)
 		}
+	}
+
+	err := u.conn.Close()
+	if err != nil {
+		log.Errorf("Failed to close user connection %v", err)
 	}
 }
 

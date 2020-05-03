@@ -212,7 +212,6 @@ func AddStreamInfo(games *dota.TopLiveGames) *dota.TopLiveGames {
 				//do something here
 				for _, stream := range steams {
 					if twitchId == stream.UserID {
-						log.Info("Found stream for user ", player.AccountID)
 						games.GameList[i].Players[playerKey].Stream = stream
 					}
 				}

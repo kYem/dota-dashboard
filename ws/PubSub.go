@@ -1,7 +1,7 @@
 package ws
 
 import (
-	"log"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"github.com/gorilla/websocket"
 	"fmt"
@@ -80,14 +80,16 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		// receive JSON type T
 		var data WsRequest
 		if err = conn.ReadJSON(&data); err != nil {
-			log.Println("Can't receive", err.Error())
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure, websocket.CloseNoStatusReceived) {
+				log.Errorf("Unexpected close error: %v", err)
+			}
 			gStore.removeUser(u)
 			break
 		}
 
 		err := gStore.SubscribeMatch(u, channelLiveMatchPrefix+data.Params.ServerSteamID)
 		if err != nil {
-			log.Println(err)
+			log.Errorf("Failed to subscribeMatch %v", err)
 		}
 
 	}

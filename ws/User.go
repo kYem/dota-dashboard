@@ -1,9 +1,23 @@
 package ws
 
 import (
-	//"time"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"github.com/gorilla/websocket"
+	"time"
+)
+
+const (
+	// Time allowed to write a message to the peer.
+	writeWait = 10 * time.Second
+
+	// Time allowed to read the next pong message from the peer.
+	pongWait = 60 * time.Second
+
+	// Send pings to peer with this period. Must be less than pongWait.
+	pingPeriod = (pongWait * 9) / 10
+
+	// Maximum message size allowed from peer.
+	maxMessageSize = 512
 )
 
 type User struct {
@@ -21,14 +35,29 @@ type User struct {
 // executing all writes from this goroutine.
 func (u *User) writePump() {
 	defer func() {
-		u.conn.Close()
+		err := u.conn.Close()
+		if err != nil {
+			log.Error(err, "Closing Connection in WritePump FAILED")
+		}
 	}()
 	for {
 		select {
-		case wsResp := <-u.send:
-			//u.conn.SetWriteDeadline(time.Now().Add(writeWait))
+		case wsResp, ok := <-u.send:
+			err := u.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err != nil {
+				log.Errorf("SetWriteDeadline %v", err)
+			}
+
+			if !ok {
+				// The hub closed the channel.
+				err := u.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				if err != nil {
+					log.Error(err, "writePump closed hub")
+				}
+				return
+			}
 			if err := u.conn.WriteJSON(wsResp); err != nil {
-				log.Printf("error on message delivery through ws. e: %s\n", err)
+				log.Errorf("error on message delivery through ws. e: %s\n", err)
 				gStore.removeUser(u)
 			}
 		}
@@ -43,7 +72,6 @@ func (u *User) removeChannel(channelName string) {
 	for i, channel := range u.Channels {
 		if channel == channelName {
 			u.Channels = append(u.Channels[:i], u.Channels[i+1:]...)
-			log.Printf("removed user %s channel %s \n", u.ID, channel)
 			break
 		}
 	}
