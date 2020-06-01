@@ -3,28 +3,20 @@ package main
 import (
 	"encoding/json"
 	"github.com/kYem/dota-dashboard/api"
-	"github.com/nicklaw5/helix"
 	"net/http"
 )
 
-var twitchClient = api.CreateTwitchClient()
-
 func Streams(w http.ResponseWriter, req *http.Request) {
 	SetDefaultHeaders(w)
-	resp, err := twitchClient.GetStreams(&helix.StreamsParams{
-		First:    10,
-		Language: []string{"en"},
-		GameIDs: []string{api.DotaGameId},
-	})
+	resp, err := api.TwitchClient.GetStreams([]string{}, 10)
 	if err != nil {
-		// handle error
-		http.Error(w, err.Error(), 400)
+		http.Error(w, err.Error(), 500)
 		return
 	}
 	err = json.NewEncoder(w).Encode(resp.Data.Streams)
 	if err != nil {
 		// handle error
-		http.Error(w, err.Error(), 400)
+		http.Error(w, err.Error(), 500)
 		return
 	}
 }

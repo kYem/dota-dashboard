@@ -155,15 +155,10 @@ func loadExtraTwitchPlayers() []twitchMap {
 	return twitchPlayers
 }
 
-var twitchClient = api.CreateTwitchClient()
-
 func fetchData(ids []string) []helix.Stream {
 
 	// Add stream data
-	twitchResp, err := twitchClient.GetStreams(&helix.StreamsParams{
-		GameIDs: []string{api.DotaGameId},
-		UserIDs: ids,
-	})
+	twitchResp, err := api.TwitchClient.GetStreams(ids, 0)
 	if err != nil {
 		log.Error("ERROR from Twitch", err)
 	}
