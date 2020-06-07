@@ -11,12 +11,18 @@ import (
 )
 
 const (
-	cdn            = "https://api.opendota.com/apps/dota2/images/heroes/"
+	cdn            = "https://steamcdn-a.akamaihd.net/apps/dota2/images/heroes/"
 	imageSize      = "_sb.png"
 	heroesFilename = "data/heroes.json"
 )
 
-var heroMap = map[int]dota.Hero {}
+var heroMap = map[int]dota.Hero {
+	0: {
+		Id: 0,
+		Name: "unknown",
+		Image: "/images/heroes/unknown-hero.jpeg",
+	},
+}
 
 
 func init() {
