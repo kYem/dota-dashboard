@@ -46,6 +46,7 @@ const (
 	lukiluki        = 117311875
 	bububu          = 106381989
 	threethree      = 86698277
+	topson          = 94054712
 )
 
 var dotaToTwitchMap = map[int]string{
@@ -89,8 +90,8 @@ var dotaToTwitchMap = map[int]string{
 	lukiluki:        "36945314",
 	bububu:          "22573825",
 	threethree:      "132521253",
+	topson:          "153670212",
 }
-
 
 var proPlayers []dota.ProPlayer
 
