@@ -34,7 +34,10 @@ type User struct {
 // application ensures that there is at most one writer to a connection by
 // executing all writes from this goroutine.
 func (u *User) writePump() {
+
+	ticker := time.NewTicker(pingPeriod)
 	defer func() {
+		ticker.Stop()
 		err := u.conn.Close()
 		if err != nil {
 			log.Error(err, "Closing Connection in WritePump FAILED")
@@ -59,6 +62,12 @@ func (u *User) writePump() {
 			if err := u.conn.WriteJSON(wsResp); err != nil {
 				log.Errorf("error on message delivery through ws. e: %s\n", err)
 				gStore.removeUser(u)
+			}
+		case <-ticker.C:
+			u.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := u.conn.WriteMessage(websocket.PingMessage, []byte("PING")); err != nil {
+				log.Error(err)
+				return
 			}
 		}
 	}
