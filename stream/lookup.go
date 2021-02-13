@@ -47,6 +47,9 @@ const (
 	bububu          = 106381989
 	threethree      = 86698277
 	topson          = 94054712
+	Cr1t            = 25907144
+	Arteezy         = 86745912
+	Dubu            = 145550466
 )
 
 var dotaToTwitchMap = map[int]string{
@@ -69,6 +72,9 @@ var dotaToTwitchMap = map[int]string{
 	Febby:         "87822995",
 	Mage:          "85002144",
 	SingSing:      "21390470",
+	Cr1t:          "32420547",
+	Arteezy:       "23364603",
+	Dubu:          "173950952",
 
 	// ybicanoooobov
 	64607133:  "68950614",
