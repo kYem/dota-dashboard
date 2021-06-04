@@ -135,7 +135,8 @@ func loadProPlayers() {
 	jsonFile, err := os.Open(proPlayerFileName)
 	// if we os.Open returns an error then handle it
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
+		return
 	}
 	log.Info("Successfully Opened " + proPlayerFileName)
 	// defer the closing of our jsonFile so that we can parse it later on
@@ -143,7 +144,8 @@ func loadProPlayers() {
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 	err = json.Unmarshal(byteValue, &proPlayers)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
+		return
 	}
 	log.Info("Successfully Loaded " + proPlayerFileName)
 }
