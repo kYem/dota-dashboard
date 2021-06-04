@@ -3,6 +3,7 @@ package stream
 import (
 	"encoding/json"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"strconv"
 
@@ -99,6 +100,8 @@ var dotaToTwitchMap = map[int]string{
 	topson:          "153670212",
 }
 
+
+const proPlayerFileName = "data/pro-players.json"
 var proPlayers []dota.ProPlayer
 
 type twitchMap struct {
@@ -123,13 +126,18 @@ func init() {
 }
 
 func loadProPlayers() {
+
+	err := loadOpenDotaPro(); if err == nil {
+		return
+	}
+
 	// Open our jsonFile
-	jsonFile, err := os.Open("data/pro-players.json")
+	jsonFile, err := os.Open(proPlayerFileName)
 	// if we os.Open returns an error then handle it
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Info("Successfully Opened pro-players.json")
+	log.Info("Successfully Opened " + proPlayerFileName)
 	// defer the closing of our jsonFile so that we can parse it later on
 	defer jsonFile.Close()
 	byteValue, _ := ioutil.ReadAll(jsonFile)
@@ -137,7 +145,29 @@ func loadProPlayers() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Info("Successfully Loaded pro-players.json")
+	log.Info("Successfully Loaded " + proPlayerFileName)
+}
+
+func loadOpenDotaPro() error {
+	resp, err := http.Get("https://api.opendota.com/api/proPlayers")
+	if err != nil {
+		return err
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&proPlayers); err != nil {
+		return err
+	}
+	log.Info("Successfully Loaded pro players from open dota")
+	err = resp.Body.Close()
+	if err != nil {
+		log.Println(err)
+	}
+
+	content, err := json.MarshalIndent(proPlayers, "", " ")
+	if err == nil {
+		_ = ioutil.WriteFile(proPlayerFileName, content, 0644)
+	}
+	return err
 }
 
 func loadExtraTwitchPlayers() []twitchMap {
