@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/kYem/dota-dashboard/api"
 	"github.com/kYem/dota-dashboard/dota"
@@ -112,6 +113,20 @@ type twitchMap struct {
 
 func init() {
 	loadProPlayers()
+
+	ticker := time.NewTicker(1 * time.Hour)
+	quit := make(chan struct{})
+	go func() {
+		for {
+			select {
+			case <- ticker.C:
+				loadProPlayers()
+			case <- quit:
+				ticker.Stop()
+				return
+			}
+		}
+	}()
 
 	twitchPlayers := loadExtraTwitchPlayers()
 	for _, twitchData := range twitchPlayers {
