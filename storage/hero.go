@@ -11,8 +11,9 @@ import (
 )
 
 const (
-	cdn            = "https://steamcdn-a.akamaihd.net/apps/dota2/images/heroes/"
-	imageSize      = "_sb.png"
+	// cdn            = "https://steamcdn-a.akamaihd.net/apps/dota2/images/heroes/"
+	cdn            = "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/"
+	imageSize      = ".png"
 	heroesFilename = "data/heroes.json"
 )
 
