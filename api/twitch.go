@@ -48,14 +48,13 @@ func createTwitchClient() *helix.Client {
 		log.Fatal(err)
 	}
 
-	token, errToken := client.GetAppAccessToken()
+	token, errToken := client.RequestAppAccessToken()
 	if errToken != nil {
 		log.Error(err)
 	}
 	client.SetAppAccessToken(token.Data.AccessToken)
 
 	return client
-
 }
 
 
