@@ -48,7 +48,8 @@ func createTwitchClient() *helix.Client {
 		log.Fatal(err)
 	}
 
-	token, errToken := client.RequestAppAccessToken()
+	var scopes []string
+	token, errToken := client.RequestAppAccessToken(scopes)
 	if errToken != nil {
 		log.Error(err)
 	}
