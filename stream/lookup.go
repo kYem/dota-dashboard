@@ -52,6 +52,7 @@ const (
 	Cr1t            = 25907144
 	Arteezy         = 86745912
 	Dubu            = 145550466
+	Oojqva          = 86738694
 )
 
 var dotaToTwitchMap = map[int]string{
@@ -77,6 +78,7 @@ var dotaToTwitchMap = map[int]string{
 	Cr1t:          "32420547",
 	Arteezy:       "23364603",
 	Dubu:          "173950952",
+	Oojqva:        "49440419",
 
 	// ybicanoooobov
 	64607133:  "68950614",
