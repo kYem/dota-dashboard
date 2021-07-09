@@ -53,6 +53,7 @@ const (
 	Arteezy         = 86745912
 	Dubu            = 145550466
 	Oojqva          = 86738694
+	Dukalis         = 73401082
 )
 
 var dotaToTwitchMap = map[int]string{
@@ -79,6 +80,7 @@ var dotaToTwitchMap = map[int]string{
 	Arteezy:       "23364603",
 	Dubu:          "173950952",
 	Oojqva:        "49440419",
+	Dukalis:       "40335925",
 
 	// ybicanoooobov
 	64607133:  "68950614",
@@ -103,8 +105,8 @@ var dotaToTwitchMap = map[int]string{
 	topson:          "153670212",
 }
 
-
 const proPlayerFileName = "data/pro-players.json"
+
 var proPlayers []dota.ProPlayer
 
 type twitchMap struct {
@@ -121,9 +123,9 @@ func init() {
 	go func() {
 		for {
 			select {
-			case <- ticker.C:
+			case <-ticker.C:
 				loadProPlayers()
-			case <- quit:
+			case <-quit:
 				ticker.Stop()
 				return
 			}
@@ -144,7 +146,8 @@ func init() {
 
 func loadProPlayers() {
 
-	err := loadOpenDotaPro(); if err == nil {
+	err := loadOpenDotaPro()
+	if err == nil {
 		return
 	}
 
