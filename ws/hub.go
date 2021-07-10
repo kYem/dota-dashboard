@@ -3,7 +3,6 @@ package ws
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/gomodule/redigo/redis"
 	"github.com/gorilla/websocket"
 	"github.com/kYem/dota-dashboard/dota"
@@ -40,7 +39,7 @@ func (s *Store) Subscribe(u *User, channelName string) error {
 
 	s.Lock()
 	if _, ok := s.Channels[channelName]; !ok {
-		fmt.Sprintf("Creating empty channel %s \n", channelName)
+		log.Infof("Creating empty channel %s \n", channelName)
 		s.Channels[channelName] = make(map[string]*User)
 
 		if conErr := gPubSubConn.Subscribe(channelName); conErr != nil {
@@ -73,7 +72,7 @@ func (s *Store) Unsubscribe(u *User, channelName string) {
 	}
 }
 
-// Only allow single sub on live match
+// SubscribeMatch Only allow single sub on live match
 func (s *Store) SubscribeMatch(u *User, channelName string) error {
 
 	// Make sure we are dealing with live match sub
