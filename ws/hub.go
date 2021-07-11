@@ -5,7 +5,9 @@ import (
 	"errors"
 	"github.com/gomodule/redigo/redis"
 	"github.com/gorilla/websocket"
+	"github.com/kYem/dota-dashboard/api"
 	"github.com/kYem/dota-dashboard/dota"
+	"github.com/kYem/dota-dashboard/storage"
 	"github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"strings"
@@ -15,18 +17,18 @@ import (
 
 // Store holds the collection of users connected through websocket
 type Store struct {
-	Users []*User
-	Channels map[string]map[string]*User
+	Users      []*User
+	Channels   map[string]map[string]*User
 	pubSubConn *redis.PubSubConn
 	sync.Mutex
 }
 
 func (s *Store) newUser(conn *websocket.Conn) *User {
 	u := &User{
-		ID:   uuid.NewV4().String(),
-		conn: conn,
+		ID:       uuid.NewV4().String(),
+		conn:     conn,
 		Channels: make([]string, 0, 1),
-		send: make(chan *ApiMatchResponse),
+		send:     make(chan *ApiMatchResponse),
 	}
 	s.Lock()
 	defer s.Unlock()
@@ -95,13 +97,50 @@ func (s *Store) SubscribeMatch(u *User, channelName string) error {
 		}
 	}
 
+	err := s.sendInitialMatchData(u, channelName)
+	if err != nil {
+		log.Error(err)
+	}
+
 	return s.Subscribe(u, channelName)
+}
+
+func (s *Store) sendInitialMatchData(u *User, channelName string) error {
+	serverSteamId := strings.Split(channelName, ".")[1]
+	match, err := api.SteamApi.GetRealTimeStats(serverSteamId)
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+	for i, game := range match.Teams {
+		for playerKey, player := range game.Players {
+			match.Teams[i].Players[playerKey].Hero = storage.HeroById(player.HeroId)
+		}
+	}
+
+	marshal, err := json.Marshal(match)
+	if err != nil {
+		return err
+	}
+
+	var apiMatch dota.ApiLiveMatch
+	if err := json.Unmarshal(marshal, &apiMatch); err != nil {
+		return err
+	}
+
+	log.Infof(`Sending api response to user %s`, u.ID)
+	u.send <- &ApiMatchResponse{
+		Event:   channelName,
+		Data:    apiMatch,
+		Success: false,
+	}
+
+	return nil
 }
 
 func isLiveMatchChannel(channelName string) bool {
 	return strings.HasPrefix(channelName, channelLiveMatchPrefix)
 }
-
 
 func (s *Store) findAndDeliver(channel string, content string) {
 
@@ -111,8 +150,8 @@ func (s *Store) findAndDeliver(channel string, content string) {
 	}
 
 	wsResp := &ApiMatchResponse{
-		Event: channel,
-		Data: match,
+		Event:   channel,
+		Data:    match,
 		Success: true,
 	}
 
