@@ -104,18 +104,10 @@ func LiveGames(w http.ResponseWriter, req *http.Request) {
 func LiveGamesStats(w http.ResponseWriter, req *http.Request) {
 	SetDefaultHeaders(w)
 	serverSteamId := req.URL.Query().Get("server_steam_id")
-	resp := api.SteamApi.GetRealTimeStats(serverSteamId)
-
-	if resp.Body == nil {
-		http.Error(w, "Please send a request body", 400)
+	match, err := api.SteamApi.GetRealTimeStats(serverSteamId)
+	if err != nil {
+		http.Error(w, err.Error(), 400)
 		return
-	}
-
-	defer resp.Body.Close()
-
-	var match dota.LiveMatch
-	if err := json.NewDecoder(resp.Body).Decode(&match); err != nil {
-		log.Println(err)
 	}
 
 	for i, game := range match.Teams {
@@ -124,7 +116,10 @@ func LiveGamesStats(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 	// Send back
-	json.NewEncoder(w).Encode(match)
+	err = json.NewEncoder(w).Encode(match)
+	if err != nil {
+		http.Error(w, err.Error(), 400)
+	}
 }
 
 func LeagueGames(w http.ResponseWriter, _ *http.Request) {

@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/kYem/dota-dashboard/config"
 	"github.com/kYem/dota-dashboard/dota"
@@ -39,6 +40,7 @@ func (client *SteamClient) GetMatchHistory(matchId string) *http.Response {
 
 
 
+// GetTopLiveGames partner options:
 // 0 NA or combined?
 // 1 China
 // 2 Europe (West)
@@ -67,16 +69,28 @@ func (client *SteamClient) getMatchUrl(endpoint string) string {
 	)
 }
 
-func (client *SteamClient) GetRealTimeStats(serverSteamId string) *http.Response {
+func (client *SteamClient) GetRealTimeStats(serverSteamId string) (*dota.LiveMatch, error) {
 
 	url := fmt.Sprintf("%s&server_steam_id=%s", client.getMatchStatsUrl("GetRealTimeStats"), serverSteamId)
 	resp, err := http.Get(url)
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return resp
+	if resp.Body == nil {
+		return  nil, errors.New("missing send a request body")
+	}
+
+	defer resp.Body.Close()
+
+	var match dota.LiveMatch
+	if err := json.NewDecoder(resp.Body).Decode(&match); err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	return &match, nil
 }
 
 func (client *SteamClient) GetLiveLeagueGames() *http.Response {
