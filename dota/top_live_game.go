@@ -34,6 +34,7 @@ type GameList struct {
 		HeroID          int          `json:"hero_id"`
 		Hero            Hero         `json:"hero"`
 		Stream          helix.Stream `json:"stream,omitempty"`
+		Name            string       `json:"name"`
 		LeaderboardRank int          `json:"seasonLeaderboardRank,omitempty"`
 		IsPro           bool         `json:"is_pro"`
 	} `json:"players"`

@@ -286,8 +286,8 @@ func AddPlayerInfo(games *dota.TopLiveGames) *dota.TopLiveGames {
 			}
 
 			if proPlayer, ok := proPlayerMap[player.AccountID]; ok {
-				log.Info(proPlayer)
 				games.GameList[i].Players[playerKey].IsPro = proPlayer.IsPro
+				games.GameList[i].Players[playerKey].Name = proPlayer.Name
 			}
 		}
 	}
