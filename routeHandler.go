@@ -79,7 +79,7 @@ func LiveGames(w http.ResponseWriter, req *http.Request) {
 		log.Println(err)
 	}
 
-	stream.AddStreamInfo(&liveGames)
+	stream.AddPlayerInfo(&liveGames)
 	for i, game := range liveGames.GameList {
 		for playerKey, player := range game.Players {
 			liveGames.GameList[i].Players[playerKey].Hero = storage.HeroById(player.HeroID)

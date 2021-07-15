@@ -107,7 +107,7 @@ var dotaToTwitchMap = map[int]string{
 
 const proPlayerFileName = "data/pro-players.json"
 
-var proPlayers []dota.ProPlayer
+var proPlayerMap = map[int]dota.ProPlayer{}
 
 type twitchMap struct {
 	SteamId     string `json:"steamId"`
@@ -144,6 +144,12 @@ func init() {
 	log.Info("Loaded twitch player map: ", len(dotaToTwitchMap))
 }
 
+func populatePlayerMap(players []dota.ProPlayer) {
+	for _, player := range players {
+		proPlayerMap[player.AccountID] = player
+	}
+}
+
 func loadProPlayers() {
 
 	err := loadOpenDotaPro()
@@ -162,11 +168,13 @@ func loadProPlayers() {
 	// defer the closing of our jsonFile so that we can parse it later on
 	defer jsonFile.Close()
 	byteValue, _ := ioutil.ReadAll(jsonFile)
+	var proPlayers []dota.ProPlayer
 	err = json.Unmarshal(byteValue, &proPlayers)
 	if err != nil {
 		log.Error(err)
 		return
 	}
+	populatePlayerMap(proPlayers)
 	log.Info("Successfully Loaded " + proPlayerFileName)
 }
 
@@ -176,9 +184,11 @@ func loadOpenDotaPro() error {
 		return err
 	}
 
+	var proPlayers []dota.ProPlayer
 	if err := json.NewDecoder(resp.Body).Decode(&proPlayers); err != nil {
 		return err
 	}
+	populatePlayerMap(proPlayers)
 	log.Info("Successfully Loaded pro players from open dota")
 	err = resp.Body.Close()
 	if err != nil {
@@ -253,7 +263,7 @@ func lookupTwitchIds(userIds []int) []string {
 	return twitchUserIds
 }
 
-func AddStreamInfo(games *dota.TopLiveGames) *dota.TopLiveGames {
+func AddPlayerInfo(games *dota.TopLiveGames) *dota.TopLiveGames {
 
 	steams := LookupPlayers(games.GameList)
 
@@ -273,6 +283,11 @@ func AddStreamInfo(games *dota.TopLiveGames) *dota.TopLiveGames {
 
 			if leaderboard, ok := api.DotaPlayers[player.AccountID]; ok {
 				games.GameList[i].Players[playerKey].LeaderboardRank = leaderboard.SteamAccount.SeasonLeaderboardRank
+			}
+
+			if proPlayer, ok := proPlayerMap[player.AccountID]; ok {
+				log.Info(proPlayer)
+				games.GameList[i].Players[playerKey].IsPro = proPlayer.IsPro
 			}
 		}
 	}
