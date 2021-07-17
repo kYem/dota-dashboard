@@ -87,29 +87,37 @@ func init() {
 
 	client := NewStratzClient("")
 
+	urls := getLeaderboardUrls(client)
+
+	go addUserDetails(urls)
+
+}
+
+func addUserDetails(urls []string) {
+	results := BoundedParallelGet(urls, 2)
+
+	for _, result := range results {
+		data := processResponse(result.err, &result.res)
+		for _, player := range data.Players {
+			DotaPlayers[player.SteamAccount.ID] = player
+		}
+	}
+
+	log.Printf("Added users count Stratz %d\n", len(DotaPlayers))
+}
+
+func getLeaderboardUrls(client *StratzClient) []string {
 	var urls []string
 	var take int32 = 100
 	for i := 0; i <= 3; i++ {
 		var start int32 = 0
-		for ;start < 300; {
+		for ; start < 300; {
 			url := client.GetSeasonLeaderBoardUrl(strconv.Itoa(i), start, take)
 			urls = append(urls, url)
 			start += take
 		}
 	}
-
-	go func() {
-		results := BoundedParallelGet(urls, 2)
-
-		for _, result := range results {
-			data := processResponse(result.err, &result.res)
-			for _, player := range data.Players {
-				DotaPlayers[player.SteamAccount.ID] = player
-			}
-		}
-
-		log.Printf("Added users count Stratz %d\n", len(DotaPlayers))
-	}()
+	return urls
 }
 
 func NewStratzClient(hostname string) *StratzClient {
