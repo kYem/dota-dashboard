@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 type StratzClient struct {
@@ -91,6 +92,15 @@ func init() {
 
 	go addUserDetails(urls)
 
+	ticker := time.NewTicker(1 * time.Hour)
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				addUserDetails(urls)
+			}
+		}
+	}()
 }
 
 func addUserDetails(urls []string) {
