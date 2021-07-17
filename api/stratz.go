@@ -92,7 +92,7 @@ func init() {
 
 	go addUserDetails(urls)
 
-	ticker := time.NewTicker(1 * time.Hour)
+	ticker := time.NewTicker(4 * time.Hour)
 	go func() {
 		for {
 			select {
