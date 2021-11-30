@@ -23,6 +23,16 @@ func SetDefaultHeaders(w http.ResponseWriter) {
 	w.Header().Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
 }
 
+func JSONError(w http.ResponseWriter, err interface{}, code int) {
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.WriteHeader(code)
+	encodeErr := json.NewEncoder(w).Encode(err)
+	if encodeErr != nil {
+		log.Println(encodeErr, err, code)
+		return
+	}
+}
+
 func HomePage(w http.ResponseWriter, req *http.Request) {
 
 	resp := api.SteamApi.GetTopLiveGames("1")
@@ -40,8 +50,6 @@ func HomePage(w http.ResponseWriter, req *http.Request) {
 	io.WriteString(w, string(body))
 }
 
-
-
 func LiveGames(w http.ResponseWriter, req *http.Request) {
 
 	SetDefaultHeaders(w)
@@ -54,7 +62,6 @@ func LiveGames(w http.ResponseWriter, req *http.Request) {
 		io.WriteString(w, cacheItem)
 		return
 	}
-
 
 	partner := req.URL.Query().Get("partner")
 	if partner == "" {
@@ -96,7 +103,6 @@ func LiveGames(w http.ResponseWriter, req *http.Request) {
 	bodyString := string(b)
 
 	c.Set(cacheKey, bodyString, 10)
-
 
 	io.WriteString(w, bodyString)
 }
@@ -142,7 +148,6 @@ func LeagueGames(w http.ResponseWriter, _ *http.Request) {
 		log.Println("Failed to Encode LeagueGames")
 	}
 }
-
 
 func PassThrough(w http.ResponseWriter, req *http.Request) {
 	SetDefaultHeaders(w)

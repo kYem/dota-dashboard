@@ -10,15 +10,13 @@ func Streams(w http.ResponseWriter, req *http.Request) {
 	SetDefaultHeaders(w)
 	resp, err := api.TwitchClient.GetStreams([]string{}, 10)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		JSONError(w, err, 500)
 		return
 	}
 	err = json.NewEncoder(w).Encode(resp.Data.Streams)
 	if err != nil {
 		// handle error
-		http.Error(w, err.Error(), 500)
+		JSONError(w, err, 500)
 		return
 	}
 }
-
-
