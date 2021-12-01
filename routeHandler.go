@@ -2,14 +2,15 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/kYem/dota-dashboard/api"
 	"github.com/kYem/dota-dashboard/cache"
 	"github.com/kYem/dota-dashboard/dota"
 	"github.com/kYem/dota-dashboard/storage"
 	"github.com/kYem/dota-dashboard/stream"
+	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -33,7 +34,9 @@ func JSONError(w http.ResponseWriter, err interface{}, code int) {
 	}
 }
 
-func HomePage(w http.ResponseWriter, req *http.Request) {
+var DefaultError = errors.New("there was a problem completing your request")
+
+func HomePage(w http.ResponseWriter) {
 
 	resp := api.SteamApi.GetTopLiveGames("1")
 
@@ -47,7 +50,7 @@ func HomePage(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	io.WriteString(w, string(body))
+	_, _ = io.WriteString(w, string(body))
 }
 
 func LiveGames(w http.ResponseWriter, req *http.Request) {
@@ -91,15 +94,19 @@ func LiveGames(w http.ResponseWriter, req *http.Request) {
 	// Send back
 	b, err := json.Marshal(liveGames)
 	if err != nil {
-		panic(err)
+		log.Error(err)
+		JSONError(w, DefaultError, 500)
 		return
 	}
 
 	bodyString := string(b)
 
-	c.Set(cacheKey, bodyString, 10)
+	err = c.Set(cacheKey, bodyString, 10)
+	if err != nil {
+		log.Error(err)
+	}
 
-	io.WriteString(w, bodyString)
+	_, _ = io.WriteString(w, bodyString)
 }
 
 func LiveGamesStats(w http.ResponseWriter, req *http.Request) {
