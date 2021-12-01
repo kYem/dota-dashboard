@@ -24,10 +24,22 @@ func SetDefaultHeaders(w http.ResponseWriter) {
 	w.Header().Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
 }
 
-func JSONError(w http.ResponseWriter, err interface{}, code int) {
+type ErrorResponse struct {
+	Error string `json:"error"`
+	Code  int    `json:"code"`
+}
+
+func JSONError(w http.ResponseWriter, err error, code int) {
+	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.WriteHeader(code)
-	encodeErr := json.NewEncoder(w).Encode(err)
+
+	resp := ErrorResponse{
+		Error: err.Error(),
+		Code:  code,
+	}
+
+	encodeErr := json.NewEncoder(w).Encode(resp)
 	if encodeErr != nil {
 		log.Println(encodeErr, err, code)
 		return
@@ -36,12 +48,12 @@ func JSONError(w http.ResponseWriter, err interface{}, code int) {
 
 var DefaultError = errors.New("there was a problem completing your request")
 
-func HomePage(w http.ResponseWriter) {
+func HomePage(w http.ResponseWriter, _ *http.Request) {
 
 	resp := api.SteamApi.GetTopLiveGames("1")
 
 	if resp.Body == nil {
-		JSONError(w, "Please send a request body", 400)
+		JSONError(w, DefaultError, 400)
 		return
 	}
 
@@ -73,7 +85,7 @@ func LiveGames(w http.ResponseWriter, req *http.Request) {
 	resp := api.SteamApi.GetTopLiveGames(partner)
 	if resp.StatusCode != http.StatusOK || resp.Body == nil {
 		log.Printf("Received api %d\n", resp.StatusCode)
-		JSONError(w, "Steam API is down", 500)
+		JSONError(w, errors.New("steam API is down"), 500)
 		return
 	}
 
