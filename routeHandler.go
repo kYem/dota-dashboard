@@ -38,7 +38,7 @@ func HomePage(w http.ResponseWriter, req *http.Request) {
 	resp := api.SteamApi.GetTopLiveGames("1")
 
 	if resp.Body == nil {
-		http.Error(w, "Please send a request body", 400)
+		JSONError(w, "Please send a request body", 400)
 		return
 	}
 
@@ -68,14 +68,9 @@ func LiveGames(w http.ResponseWriter, req *http.Request) {
 		partner = "0"
 	}
 	resp := api.SteamApi.GetTopLiveGames(partner)
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusOK || resp.Body == nil {
 		log.Printf("Received api %d\n", resp.StatusCode)
-		http.Error(w, "Steam api is down", 500)
-		return
-	}
-
-	if resp.Body == nil {
-		http.Error(w, "Please send a request body", 400)
+		JSONError(w, "Steam API is down", 500)
 		return
 	}
 
