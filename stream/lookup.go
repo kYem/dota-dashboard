@@ -54,6 +54,7 @@ const (
 	Dubu            = 145550466
 	Oojqva          = 86738694
 	Dukalis         = 73401082
+	Xcalibur        = 245373129
 )
 
 var dotaToTwitchMap = map[int]string{
@@ -81,6 +82,7 @@ var dotaToTwitchMap = map[int]string{
 	Dubu:          "173950952",
 	Oojqva:        "49440419",
 	Dukalis:       "40335925",
+	Xcalibur:      "67416440",
 
 	// ybicanoooobov
 	64607133:  "68950614",
