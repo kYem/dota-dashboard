@@ -20,8 +20,8 @@ type GameList struct {
 	SeriesID        int    `json:"series_id"`
 	TeamNameRadiant string `json:"team_name_radiant"`
 	TeamNameDire    string `json:"team_name_dire"`
-	TeamLogoRadiant int64  `json:"team_logo_radiant"`
-	TeamLogoDire    int64  `json:"team_logo_dire"`
+	TeamLogoRadiant string `json:"team_logo_radiant"`
+	TeamLogoDire    string `json:"team_logo_dire"`
 	TeamIDRadiant   int    `json:"team_id_radiant"`
 	TeamIDDire      int    `json:"team_id_dire"`
 	SortScore       int    `json:"sort_score"`

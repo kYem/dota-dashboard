@@ -13,12 +13,11 @@ import (
 const VERSION = "v001"
 
 type SteamClient struct {
-	schema        string
-	hostname      string
-	game          string
-	apiKey        string
+	schema   string
+	hostname string
+	game     string
+	apiKey   string
 }
-
 
 var SteamApi SteamClient
 
@@ -37,8 +36,6 @@ func (client *SteamClient) GetMatchHistory(matchId string) *http.Response {
 
 	return resp
 }
-
-
 
 // GetTopLiveGames partner options:
 // 0 NA or combined?
@@ -75,19 +72,26 @@ func (client *SteamClient) GetRealTimeStats(serverSteamId string) (*dota.LiveMat
 	resp, err := http.Get(url)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("call Steam GetRealTimeStats, status: %s: %w", resp.Status, err)
+	}
+
+	if resp.StatusCode == 403 {
+		return nil, fmt.Errorf("API permission denied: Steam GetRealTimeStats %w", err)
+	}
+
+	if resp.StatusCode >= 400 {
+		return nil, fmt.Errorf("API Steam GetRealTimeStats status: %s: %w", resp.Status, err)
 	}
 
 	if resp.Body == nil {
-		return  nil, errors.New("missing send a request body")
+		return nil, errors.New("API Steam GetRealTimeStats missing request body")
 	}
 
 	defer resp.Body.Close()
 
 	var match dota.LiveMatch
 	if err := json.NewDecoder(resp.Body).Decode(&match); err != nil {
-		log.Println(err)
-		return nil, err
+		return nil, fmt.Errorf("json.NewDecoder GetRealTimeStats Decode %w", err)
 	}
 
 	return &match, nil
@@ -128,7 +132,6 @@ func (client *SteamClient) getEconUrl(endpoint string) string {
 
 func (client *SteamClient) GetHeroes() ([]dota.HeroBasic, error) {
 	resp, err := http.Get(client.getEconUrl("GetHeroes"))
-
 
 	if err != nil {
 		return nil, err

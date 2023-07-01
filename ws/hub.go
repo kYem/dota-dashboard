@@ -109,7 +109,6 @@ func (s *Store) sendInitialMatchData(u *User, channelName string) error {
 	serverSteamId := strings.Split(channelName, ".")[1]
 	match, err := api.SteamApi.GetRealTimeStats(serverSteamId)
 	if err != nil {
-		log.Error(err)
 		return err
 	}
 	for i, game := range match.Teams {
@@ -146,7 +145,9 @@ func (s *Store) findAndDeliver(channel string, content string) {
 
 	var match dota.ApiLiveMatch
 	if err := json.Unmarshal([]byte(content), &match); err != nil {
-		log.Error(err)
+		log.WithFields(log.Fields{
+			"fn": "findAndDeliver",
+		}).Error(err)
 	}
 
 	wsResp := &ApiMatchResponse{
